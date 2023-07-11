@@ -23,9 +23,11 @@ class HashManager:
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
     ) -> str:
         hashed_args = []
-        for arg_name, arg in self._normalize_args(args, kwargs, func):
+
+        for arg_name, arg in self._normalize_args(args, kwargs, func).items():
             hasher = self._get_hasher(arg_name, arg)
-            hashed_args.append(hasher.hash(arg))
+            hashed_value = hasher.hash(arg)
+            hashed_args.append(self._combine_hashes([arg_name, hashed_value]))
         hash_result = self._combine_hashes(hashed_args)
         if self.hash_code:
             hash_result = self._combine_hashes([hash_result, self._hash_code(func)])
@@ -47,17 +49,21 @@ class HashManager:
     def _normalize_args(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
     ):
+        args = list(args)
         normalized_args = OrderedDict()
 
         sign = inspect.signature(func)
 
         for arg_name, param in sign.parameters.items():
             if param.kind == param.POSITIONAL_ONLY:
-                # Value must be supplied as a positional argument.
-                # Python has no explicit syntax for defining positional-only parameters, but many built-in and extension module functions (especially those that accept only one or two parameters) accept them.
+                # NOTE: Value must be supplied as a positional argument.
+                #       Python has no explicit syntax for defining positional-only parameters,
+                #       but many built-in and extension module functions (especially those that
+                #       accept only one or two parameters) accept them.
                 normalized_args[arg_name] = args.pop(0)
             elif param.kind == param.POSITIONAL_OR_KEYWORD:
-                # Value may be supplied as either a keyword or positional argument (this is the standard binding behaviour for functions implemented in Python.)
+                # NOTE: Value may be supplied as either a keyword or positional argument.
+                #       This is the standard binding behaviour for functions implemented in Python.
                 if arg_name in kwargs:
                     normalized_args[arg_name] = kwargs[arg_name]
                 elif len(args) > 0:
@@ -66,17 +72,27 @@ class HashManager:
                     normalized_args[arg_name] = param.default
 
             elif param.kind == param.VAR_POSITIONAL:
-                # A tuple of positional arguments that aren’t bound to any other parameter. This corresponds to a *args parameter in a Python function definition.
+                # NOTE: A tuple of positional arguments that aren’t bound to any other parameter.
+                #       This corresponds to a *args parameter in a Python function definition.
+
+                # consume all remainder args
                 for i, arg in enumerate(args):
-                    normalized_args[f"#{i}"] = arg
-                arg = []
+                    normalized_args[f"*{i}"] = arg
+                args = []
             elif param.kind == param.KEYWORD_ONLY:
-                # Value must be supplied as a keyword argument. Keyword only parameters are those which appear after a * or *args entry in a Python function definition.
-                normalized_args[arg_name] = kwargs[arg_name]
+                # NOTE: Value must be supplied as a keyword argument.
+                #       Keyword only parameters are those which appear after a * or *args entry
+                #       in a Python function definition.
+                # If the param is keyword only then it must be passed as a kwarg, however
+                # we are not enforncing it here so that we don't fail and instead the user gets the normal
+                # python error
+                normalized_args[arg_name] = kwargs.get(arg_name)
             if param.kind == param.VAR_KEYWORD:
-                # A dict of keyword arguments that aren’t bound to any other parameter. This corresponds to a **kwargs parameter in a Python function definition.
-                if arg_name in kwargs:
-                    normalized_args[arg_name] = kwargs[arg_name]
-                else:
-                    normalized_args[arg_name] = param.default
+                # NOTE: A dict of keyword arguments that aren’t bound to any other parameter.
+                #       This corresponds to a **kwargs parameter in a Python function definition.
+
+                # consume all remainder kwargs
+                for arg_name, arg in kwargs.items():
+                    normalized_args[f"**{arg_name}"] = arg
+                kwargs = {}
         return normalized_args

@@ -35,7 +35,6 @@ def remember(
             logger.info("Cache miss %s", hash_key)
             result = func(*args, **kwargs)
 
-            logger.debug("Storing %s", hash_key)
             path = _cacher.new(hash_key)
             _serializer.dump(result, path)
             _cacher.add(hash_key, path)
