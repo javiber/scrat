@@ -4,9 +4,11 @@ import pytest
 
 import elephant as el
 
-logging.basicConfig(level=logging.INFO)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.ERROR)
-
+logging.basicConfig(
+    level=logging.DEBUG,
+    format=" %(name)s :: %(levelname)-8s :: %(message)s",
+    force=True,
+)
 # TODO: The method of a nonlocal counter is not great
 #       There should be a way to setup a fixture or a mock
 #       to check how many times the underlying function is called
@@ -210,3 +212,7 @@ def test_multiple_func():
     assert cached_func_2() == 1
     assert counter_1 == 1
     assert counter_2 == 1
+
+
+if __name__ == "__main__":
+    test_no_params()

@@ -1,10 +1,5 @@
-from typing import Optional
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
-
-# TODO: persist DB
-engine = create_engine("sqlite://", echo=True)
 
 
 class Base(DeclarativeBase):
@@ -35,6 +30,8 @@ class Entry(Base):
         return f"Entry(hash={self.hash!r}, path={self.path!r})"
 
 
-Base.metadata.create_all(engine)
+def create_db(path):
+    engine = create_engine("sqlite:///" + path)
+    Base.metadata.create_all(engine)
 
-Session = sessionmaker(engine)
+    return sessionmaker(engine)

@@ -4,7 +4,7 @@ from pathlib import Path
 from appdirs import user_cache_dir
 from sqlalchemy.sql import exists, select
 
-from elephant.db import Entry, Session
+from elephant.db import Entry, create_db
 from elephant.utils import PathLike
 
 from .base import Cacher
@@ -19,8 +19,10 @@ class SimpleCacher(Cacher):
         self.base_path = base_path
         os.makedirs(self.base_path, exist_ok=True)
 
+        self.db = create_db(str((self.base_path / "cache.db").absolute()))
+
     def add(self, hash: str, path: Path) -> int:
-        with Session() as session:
+        with self.db() as session:
             session.add(
                 Entry(
                     hash=hash,
@@ -33,9 +35,9 @@ class SimpleCacher(Cacher):
         return self.base_path / hash
 
     def exists(self, hash):
-        with Session() as session:
+        with self.db() as session:
             return session.query(exists().where(Entry.hash == hash)).scalar()
 
     def get(self, hash):
-        with Session() as session:
+        with self.db() as session:
             return Path(session.scalar(select(Entry).where(Entry.hash == hash)).path)

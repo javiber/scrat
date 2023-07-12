@@ -37,11 +37,10 @@ class HashManager:
     def _get_hasher(self, arg_name: str, arg: T.Any) -> Hasher:
         if arg_name in self.hashers:
             return self.hashers[arg_name]
-        # TODO: class defaults?
         return ToStringHasher()
 
     def _combine_hashes(self, hashes: T.List[str]) -> str:
-        return "".join(hashes)
+        return sha1("".join(hashes).encode()).hexdigest()
 
     def _hash_code(self, func) -> str:
         return sha1(inspect.getsource(func).encode()).hexdigest()
