@@ -2,7 +2,7 @@ import functools
 import logging
 import typing as T
 
-from .cacher import Cacher, SimpleCacher
+from .cache import CacheManager
 from .hasher.manager import HashManager
 from .serializer import Serializer, get_default_serializer
 
@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 def remember(
-    cacher: T.Optional[Cacher] = None,
     serializer: T.Optional[Serializer] = None,
     hashers=None,
     name=None,
@@ -22,7 +21,7 @@ def remember(
         _serializer = (
             serializer if serializer is not None else get_default_serializer(func)
         )
-        _cacher = cacher if cacher is not None else SimpleCacher()
+        _cacher = CacheManager()
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
