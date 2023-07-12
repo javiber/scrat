@@ -3,6 +3,8 @@ import typing as T
 from collections import OrderedDict
 from hashlib import sha1
 
+from elephant.utils import hash_method
+
 from .base import Hasher
 from .to_string import ToStringHasher
 
@@ -14,7 +16,7 @@ class HashManager:
         hashers: T.Optional[T.Dict[str, Hasher]] = None,
         hash_code: T.Optional[bool] = True,
     ) -> None:
-        # TODO: enforce unique names
+        # TODO: enforce unique names?
         self.name = name
         self.hash_code = hash_code
         self.hashers: T.Dict[str, Hasher] = hashers if hashers is not None else {}
@@ -22,25 +24,25 @@ class HashManager:
     def hash(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
     ) -> str:
+        # hash arguments
         hashed_args = []
-
         for arg_name, arg in self._normalize_args(args, kwargs, func).items():
             hasher = self._get_hasher(arg_name, arg)
             hashed_value = hasher.hash(arg)
-            hashed_args.append(self._combine_hashes([arg_name, hashed_value]))
-        hash_result = self._combine_hashes(hashed_args)
-        if self.hash_code:
-            hash_result = self._combine_hashes([hash_result, self._hash_code(func)])
+            hashed_args.append(hash_method(arg_name, hashed_value))
+        hash_result = hash_method(*hashed_args)
 
+        # hash funcion's code if necessary
+        if self.hash_code:
+            hash_result = hash_method(hash_result, self._hash_code(func))
+
+        # prepend name for traceability
         return "_".join([self.name, hash_result])
 
     def _get_hasher(self, arg_name: str, arg: T.Any) -> Hasher:
         if arg_name in self.hashers:
             return self.hashers[arg_name]
         return ToStringHasher()
-
-    def _combine_hashes(self, hashes: T.List[str]) -> str:
-        return sha1("".join(hashes).encode()).hexdigest()
 
     def _hash_code(self, func) -> str:
         return sha1(inspect.getsource(func).encode()).hexdigest()
