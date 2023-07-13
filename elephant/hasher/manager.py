@@ -57,7 +57,7 @@ class HashManager:
                 "using '%s' for argument '%s'", hasher.__class__.__name__, arg_name
             )
             hashed_value = hasher.hash(arg)
-            hashed_args.append(hash_method(arg_name, hashed_value))
+            hashed_args.append(hash_method(arg_name, hashed_value, type(arg).__name__))
         hash_result = hash_method(*hashed_args)
         logger.debug("%s arguments hash: '%s'", self.name, hash_result)
 
