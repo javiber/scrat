@@ -1,6 +1,7 @@
 import click
 
-from .config import init
+from .cache import cache
+from .setup import init
 
 
 @click.group()
@@ -9,6 +10,7 @@ def elephant():
 
 
 elephant.add_command(init)
+elephant.add_command(cache)
 
 if __name__ == "__main__":
     elephant()
