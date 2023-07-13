@@ -1,12 +1,37 @@
 import inspect
+import logging
 import typing as T
 from collections import OrderedDict
-from hashlib import sha1
+from collections.abc import Iterable
 
 from elephant.utils import hash_method
 
 from .base import Hasher
+from .iterable import IterableHasher
+from .numpy import NumpyHasher
+from .pandas import PandasHasher
 from .to_string import ToStringHasher
+
+logger = logging.getLogger(__name__)
+
+
+FALLBACK = ToStringHasher()
+DEFAULTS = OrderedDict()
+try:
+    import numpy as np
+
+    DEFAULTS[np.ndarray] = NumpyHasher()
+except ImportError:
+    logger.debug("numpy not installed, NumpyHasher disabled")
+try:
+    import pandas as pd
+
+    DEFAULTS[pd.DataFrame] = PandasHasher()
+    DEFAULTS[pd.Series] = PandasHasher()
+except ImportError:
+    logger.debug("numpy not installed, NumpyHasher disabled")
+
+DEFAULTS[Iterable] = IterableHasher(FALLBACK)
 
 
 class HashManager:
@@ -28,24 +53,35 @@ class HashManager:
         hashed_args = []
         for arg_name, arg in self._normalize_args(args, kwargs, func).items():
             hasher = self._get_hasher(arg_name, arg)
+            logger.debug(
+                "using '%s' for argument '%s'", hasher.__class__.__name__, arg_name
+            )
             hashed_value = hasher.hash(arg)
             hashed_args.append(hash_method(arg_name, hashed_value))
         hash_result = hash_method(*hashed_args)
+        logger.debug("%s arguments hash: '%s'", self.name, hash_result)
 
         # hash funcion's code if necessary
         if self.hash_code:
-            hash_result = hash_method(hash_result, self._hash_code(func))
+            hashed_code = self._hash_code(func)
+            hash_result = hash_method(hash_result, hashed_code)
+            logger.debug("%s code hash: '%s'", self.name, hashed_code)
 
         # prepend name for traceability
-        return "_".join([self.name, hash_result])
+        hash_result = "_".join([self.name, hash_result])
+        logger.debug("%s final hash: '%s'", self.name, hash_result)
+        return hash_result
 
     def _get_hasher(self, arg_name: str, arg: T.Any) -> Hasher:
         if arg_name in self.hashers:
             return self.hashers[arg_name]
-        return ToStringHasher()
+        for cls, hasher in DEFAULTS.items():
+            if isinstance(arg, cls):
+                return hasher
+        return FALLBACK
 
     def _hash_code(self, func) -> str:
-        return sha1(inspect.getsource(func).encode()).hexdigest()
+        return hash_method(inspect.getsource(func).encode())
 
     def _normalize_args(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
