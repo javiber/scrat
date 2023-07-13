@@ -1,10 +1,14 @@
 import functools
 import logging
+import os
 import typing as T
+from datetime import datetime
 
 from .cache import CacheManager
+from .db import Entry
 from .hasher.manager import HashManager
 from .serializer import Serializer, get_default_serializer
+from .utils import Timer
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +27,8 @@ def remember(
         )
         _cacher = CacheManager()
 
+        timer = Timer()
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             hash_key = hash_manager.hash(args, kwargs, func)
@@ -32,11 +38,24 @@ def remember(
                 return _serializer.load(_cacher.get(hash_key))
 
             logger.info("Cache miss %s", hash_key)
+            timer.start()
             result = func(*args, **kwargs)
-
+            func_time = timer.end()
             path = _cacher.new(hash_key)
             _serializer.dump(result, path)
-            _cacher.add(hash_key, path)
+            file_size = round(os.stat(path).st_size / (1024 * 1024))
+
+            entry = Entry(
+                hash=hash_key,
+                name=hash_manager.name,
+                path=str(path),
+                created_at=datetime.now(),
+                used_at=None,
+                size_mb=file_size,
+                use_count=0,
+                time_s=func_time,
+            )
+            _cacher.add(entry)
 
             return result
 

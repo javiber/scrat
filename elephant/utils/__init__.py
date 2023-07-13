@@ -2,6 +2,8 @@ import hashlib
 import typing as T
 from pathlib import Path
 
+from .timer import Timer
+
 PathLike = T.Union[str, Path]
 
 

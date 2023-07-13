@@ -83,14 +83,9 @@ class CacheManager:
 
         return CacheConfig.load(base_path=base_dir)
 
-    def add(self, hash: str, path: Path) -> int:
+    def add(self, entry: Entry) -> int:
         with self.db() as session:
-            session.add(
-                Entry(
-                    hash=hash,
-                    path=str(path),
-                )
-            )
+            session.add(entry)
             session.commit()
 
     def new(self, hash: str) -> Path:
