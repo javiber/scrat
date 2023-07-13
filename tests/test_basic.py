@@ -35,7 +35,7 @@ def test_one_arg():
     def one_arg_func(a):
         nonlocal counter
         counter += 1
-        return a * 2
+        return a + a
 
     cached_func = el.remember()(one_arg_func)
 
@@ -50,6 +50,12 @@ def test_one_arg():
     assert cached_func(2) == 4
     assert cached_func(a=2) == 4
     assert counter == 2
+
+    assert cached_func("1") == "11"
+    assert counter == 3
+    assert cached_func("1") == "11"
+    assert cached_func(a="1") == "11"
+    assert counter == 3
 
 
 def test_multiple_args():

@@ -14,4 +14,4 @@ class IterableHasher(Hasher):
         self.item_hasher = item_hasher
 
     def hash(self, value: T.Iterable) -> str:
-        return hash_method(*[self.item_hasher(x) for x in value])
+        return hash_method(*[self.item_hasher.hash(x) for x in value])

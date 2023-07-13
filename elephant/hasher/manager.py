@@ -31,7 +31,8 @@ try:
 except ImportError:
     logger.debug("numpy not installed, NumpyHasher disabled")
 
-DEFAULTS[Iterable] = IterableHasher(FALLBACK)
+DEFAULTS[list] = IterableHasher(FALLBACK)
+DEFAULTS[tuple] = IterableHasher(FALLBACK)
 
 
 class HashManager:
