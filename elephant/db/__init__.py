@@ -1,3 +1,4 @@
+import os
 import typing as T
 from datetime import datetime
 
@@ -17,7 +18,7 @@ class Entry(Base):
 
     created_at: Mapped[datetime]
     used_at: Mapped[T.Optional[datetime]]
-    size_mb: Mapped[int]
+    size: Mapped[int]
     use_count: Mapped[int]
     time_s: Mapped[int]
 

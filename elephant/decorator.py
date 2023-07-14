@@ -5,7 +5,6 @@ import typing as T
 from datetime import datetime
 
 from .cache import CacheManager
-from .db import Entry
 from .hasher.manager import HashManager
 from .serializer import Serializer, get_default_serializer
 from .utils import Timer
@@ -25,7 +24,7 @@ def remember(
         _serializer = (
             serializer if serializer is not None else get_default_serializer(func)
         )
-        _cacher = CacheManager()
+        cache_manager = CacheManager()
 
         timer = Timer()
 
@@ -33,29 +32,27 @@ def remember(
         def wrapper(*args, **kwargs):
             hash_key = hash_manager.hash(args, kwargs, func)
 
-            if _cacher.exists(hash_key):
+            if cache_manager.exists(hash_key):
                 logger.info("Cache hit %s", hash_key)
-                return _serializer.load(_cacher.get(hash_key))
+                entry = cache_manager.get(hash_key)
+                result = _serializer.load(entry.path)
+                cache_manager.update_usage(entry)
+                return result
 
             logger.info("Cache miss %s", hash_key)
             timer.start()
             result = func(*args, **kwargs)
             func_time = timer.end()
-            path = _cacher.new(hash_key)
+            path = cache_manager.new(hash_key)
             _serializer.dump(result, path)
-            file_size = round(os.stat(path).st_size / (1024 * 1024))
 
-            entry = Entry(
+            entry = cache_manager.new_entry(
                 hash=hash_key,
                 name=hash_manager.name,
                 path=str(path),
-                created_at=datetime.now(),
-                used_at=None,
-                size_mb=file_size,
-                use_count=0,
                 time_s=func_time,
             )
-            _cacher.add(entry)
+            cache_manager.add(entry)
 
             return result
 

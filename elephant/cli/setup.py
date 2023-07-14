@@ -1,14 +1,15 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import click
 
-from elephant.cache import CacheConfig
-from elephant.db import create_db
+from elephant.cache import CacheConfig, CacheManager
+from elephant.db import Entry, create_db
 
 
 def make_config(path) -> CacheConfig:
-    return CacheConfig.init(base_path=path)
+    return CacheConfig.create_config_file(base_path=path)
 
 
 def make_db(path):

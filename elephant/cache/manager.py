@@ -1,6 +1,7 @@
 import os
 import typing as T
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
@@ -47,7 +48,7 @@ class CacheConfig:
         )
 
     @classmethod
-    def init(cls, base_path: Path, *args, **kwargs):
+    def create_config_file(cls, base_path: Path, *args, **kwargs):
         config = cls(base_path=base_path, *args, **kwargs)
         with open(base_path / cls._config_file, "w") as f:
             yaml.dump(
@@ -95,6 +96,34 @@ class CacheManager:
         with self.db() as session:
             return session.query(exists().where(Entry.hash == hash)).scalar()
 
-    def get(self, hash):
+    def get(self, hash) -> Entry:
         with self.db() as session:
-            return Path(session.scalar(select(Entry).where(Entry.hash == hash)).path)
+            return session.scalar(select(Entry).where(Entry.hash == hash))
+
+    def update_usage(self, entry: Entry):
+        with self.db() as session:
+            session.query(Entry).where(Entry.hash == entry.hash).update(
+                {Entry.use_count: entry.use_count + 1, Entry.used_at: datetime.now()},
+                synchronize_session=False,
+            )
+            session.commit()
+
+    def new_entry(
+        cls,
+        hash: str,
+        name: str,
+        path: str,
+        time_s: int,
+    ) -> Entry:
+        file_size = round(os.stat(path).st_size)
+
+        return Entry(
+            hash=hash,
+            name=name,
+            path=path,
+            created_at=datetime.now(),
+            used_at=None,
+            size=file_size,
+            use_count=0,
+            time_s=time_s,
+        )
