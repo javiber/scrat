@@ -29,7 +29,7 @@ try:
     DEFAULTS[pd.DataFrame] = PandasHasher()
     DEFAULTS[pd.Series] = PandasHasher()
 except ImportError:
-    logger.debug("numpy not installed, NumpyHasher disabled")
+    logger.debug("pandas not installed, NumpyHasher disabled")
 
 DEFAULTS[list] = IterableHasher(FALLBACK)
 DEFAULTS[tuple] = IterableHasher(FALLBACK)

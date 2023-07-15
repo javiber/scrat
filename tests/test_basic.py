@@ -14,7 +14,7 @@ logging.basicConfig(
 #       to check how many times the underlying function is called
 
 
-def test_no_params():
+def test_no_params(patched_decorator):
     counter = 0
 
     def no_params_func():
@@ -22,14 +22,14 @@ def test_no_params():
         counter += 1
         return counter
 
-    cached_func = el.remember()(no_params_func)
+    cached_func = patched_decorator()(no_params_func)
 
     assert cached_func() == 1
     assert cached_func() == 1
     assert counter == 1
 
 
-def test_one_arg():
+def test_one_arg(patched_decorator):
     counter = 0
 
     def one_arg_func(a):
@@ -37,7 +37,7 @@ def test_one_arg():
         counter += 1
         return a + a
 
-    cached_func = el.remember()(one_arg_func)
+    cached_func = patched_decorator()(one_arg_func)
 
     assert cached_func(1) == 2
     assert counter == 1
@@ -58,7 +58,7 @@ def test_one_arg():
     assert counter == 3
 
 
-def test_multiple_args():
+def test_multiple_args(patched_decorator):
     counter = 0
 
     def multiple_args_func(a, b):
@@ -66,7 +66,7 @@ def test_multiple_args():
         counter += 1
         return a + b
 
-    cached_func = el.remember()(multiple_args_func)
+    cached_func = patched_decorator()(multiple_args_func)
 
     assert cached_func(1, 1) == 2
     assert counter == 1
@@ -83,7 +83,7 @@ def test_multiple_args():
     assert counter == 2
 
 
-def test_keyword_only_args():
+def test_keyword_only_args(patched_decorator):
     counter = 0
 
     def keyword_only_args_func(a, *, b):
@@ -91,7 +91,7 @@ def test_keyword_only_args():
         counter += 1
         return a + b
 
-    cached_func = el.remember()(keyword_only_args_func)
+    cached_func = patched_decorator()(keyword_only_args_func)
 
     #
     # Test that the cached function raises the same exception
@@ -118,7 +118,7 @@ def test_keyword_only_args():
     assert counter == 2
 
 
-def test_var_args():
+def test_var_args(patched_decorator):
     counter = 0
 
     def var_args_func(*args, **kwargs):
@@ -126,7 +126,7 @@ def test_var_args():
         counter += 1
         return sum(args) + sum(kwargs.values())
 
-    cached_func = el.remember()(var_args_func)
+    cached_func = patched_decorator()(var_args_func)
 
     assert cached_func(1, b=1) == 2
     assert counter == 1
@@ -151,7 +151,7 @@ def test_var_args():
     assert counter == 4
 
 
-def test_code_changes():
+def test_code_changes(patched_decorator):
     counter = 0
 
     def code_changes_func():
@@ -159,7 +159,7 @@ def test_code_changes():
         counter += 1
         return 1
 
-    cached_func = el.remember()(code_changes_func)
+    cached_func = patched_decorator()(code_changes_func)
 
     assert cached_func() == 1
     assert cached_func() == 1
@@ -171,7 +171,7 @@ def test_code_changes():
         counter += 1
         return 1
 
-    cached_func = el.remember()(code_changes_func)
+    cached_func = patched_decorator()(code_changes_func)
 
     assert cached_func() == 1
     assert cached_func() == 1
@@ -183,14 +183,14 @@ def test_code_changes():
         counter += 1
         return 2  # <- difference
 
-    cached_func = el.remember()(code_changes_func)
+    cached_func = patched_decorator()(code_changes_func)
 
     assert cached_func() == 2
     assert cached_func() == 2
     assert counter == 2
 
 
-def test_multiple_func():
+def test_multiple_func(patched_decorator):
     counter_1 = 0
 
     def multi_func_1():
@@ -198,7 +198,7 @@ def test_multiple_func():
         counter_1 += 1
         return 1
 
-    cached_func_1 = el.remember()(multi_func_1)
+    cached_func_1 = patched_decorator()(multi_func_1)
 
     counter_2 = 0
 
@@ -207,7 +207,7 @@ def test_multiple_func():
         counter_2 += 1
         return 1
 
-    cached_func_2 = el.remember()(multi_func_2)
+    cached_func_2 = patched_decorator()(multi_func_2)
 
     assert cached_func_1() == 1
     assert cached_func_2() == 1
@@ -218,7 +218,3 @@ def test_multiple_func():
     assert cached_func_2() == 1
     assert counter_1 == 1
     assert counter_2 == 1
-
-
-if __name__ == "__main__":
-    test_no_params()

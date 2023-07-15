@@ -28,11 +28,11 @@ class CacheConfig:
     _config_file: str = "config.yaml"
 
     @property
-    def cache_path(self) -> str:
+    def cache_path(self) -> Path:
         return self.base_path / self._cache_dir
 
     @property
-    def db_path(self) -> str:
+    def db_path(self) -> Path:
         return self.base_path / self._db_file
 
     # TODO: find a way to automatically save and load to/from yaml
