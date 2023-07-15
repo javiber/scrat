@@ -18,7 +18,8 @@ def make_db(path):
 
 @click.command()
 def init():
-    folder = Path(os.getcwd()) / ".elephant"
+    cwd = Path(os.getcwd())
+    folder = cwd / ".elephant"
 
     if os.path.exists(folder):
         click.secho("already initialized", fg="red")
@@ -29,7 +30,9 @@ def init():
     make_db(config.db_path)
     os.mkdir(folder / "cache")
 
-    # TODO: add to gitignore
+    if os.path.exists(cwd / ".git"):
+        with open(folder / ".gitignore", "w") as f:
+            f.writelines(["./cache\n" "./cache.db\n"])
 
 
 if __name__ == "__main__":
