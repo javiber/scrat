@@ -15,9 +15,15 @@ class PandasSerializer:
     def dump(self, obj: T.Any, path: Path):
         if self.format == Format.parquet:
             obj.to_parquet(path)
+        elif self.format == Format.csv:
+            obj.to_csv(path)
 
     def load(self, path: Path) -> T.Any:
         import pandas as pd  # noqa
 
         if self.format == Format.parquet:
-            pd.read_parquet(path)
+            df = pd.read_parquet(path)
+        elif self.format == Format.csv:
+            df = pd.read_csv(path)
+
+        return df

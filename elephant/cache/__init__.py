@@ -1,1 +1,1 @@
-from .manager import CacheConfig, CacheManager  # noqa
+from .manager import CacheConfig, CacheManager
