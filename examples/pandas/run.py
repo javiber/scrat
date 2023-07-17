@@ -11,8 +11,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 @el.remember()
 def slow_func(df):
-    time.sleep(10)
-    return df + 2
+    print("FUNCTION CALLED")
+    return df + 1
 
 
 if __name__ == "__main__":

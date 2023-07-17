@@ -18,6 +18,8 @@ def remember(
     hashers: T.Optional[T.Dict[str, Hasher]] = None,
     hash_code: T.Optional[bool] = True,
     ignore_args: T.Optional[T.List[str]] = None,
+    watch_functions: T.Optional[T.List[T.Any]] = None,
+    watch_globals: T.Optional[T.List[str]] = None,
 ):
     def deco(func):
         hash_manager = HashManager(
@@ -25,6 +27,8 @@ def remember(
             name=name if name is not None else func.__name__,
             ignore_args=ignore_args,
             hash_code=hash_code,
+            watch_functions=watch_functions,
+            watch_globals=watch_globals,
         )
         _serializer = (
             serializer if serializer is not None else get_default_serializer(func)

@@ -41,27 +41,24 @@ class HashManager:
         hashers: T.Optional[T.Dict[str, Hasher]] = None,
         hash_code: T.Optional[bool] = True,
         ignore_args: T.Optional[T.List[str]] = None,
+        watch_functions: T.Optional[T.List[T.Any]] = None,
+        watch_globals: T.Optional[T.List[str]] = None,
     ) -> None:
         # TODO: enforce unique names?
         self.name = name
         self.hash_code = hash_code
         self.hashers = hashers if hashers is not None else {}
         self.ignore_args = set(ignore_args if ignore_args is not None else [])
+        self.watch_functions = watch_functions if watch_functions is not None else []
+        self.watch_globals = watch_globals if watch_globals is not None else []
 
     def hash(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
     ) -> str:
         # hash arguments
         hashed_args = []
-        for arg_name, arg in self._normalize_args(args, kwargs, func).items():
-            if arg_name in self.ignore_args:
-                continue
-            hasher = self._get_hasher(arg_name, arg)
-            logger.debug(
-                "using '%s' for argument '%s'", hasher.__class__.__name__, arg_name
-            )
-            hashed_value = hasher.hash(arg)
-            hashed_args.append(hash_method(arg_name, hashed_value, type(arg).__name__))
+        for arg_name, arg_value in self._normalize_args(args, kwargs, func).items():
+            hashed_args.append(self.hash_argument(arg_name, arg_value))
         hash_result = hash_method(*hashed_args)
         logger.debug("%s arguments hash: '%s'", self.name, hash_result)
 
@@ -71,10 +68,31 @@ class HashManager:
             hash_result = hash_method(hash_result, hashed_code)
             logger.debug("%s code hash: '%s'", self.name, hashed_code)
 
+        if len(self.watch_functions):
+            hash_result = hash_method(
+                hash_result, *[self._hash_code(f) for f in self.watch_functions]
+            )
+
+        if len(self.watch_globals):
+            closure = inspect.getclosurevars(func)
+            global_vars = closure.globals | closure.nonlocals
+            globals_hash = []
+            for global_name in self.watch_globals:
+                gloval_value = global_vars[global_name]
+                globals_hash.append(self.hash_argument(global_name, gloval_value))
+
+            hash_result = hash_method(hash_result, *globals_hash)
+
         # prepend name for traceability
         hash_result = "_".join([self.name, hash_result])
         logger.debug("%s final hash: '%s'", self.name, hash_result)
         return hash_result
+
+    def hash_argument(self, name, value):
+        hasher = self._get_hasher(name, value)
+        logger.debug("using '%s' for argument '%s'", hasher.__class__.__name__, name)
+        hashed_value = hasher.hash(value)
+        return hash_method(name, hashed_value, type(value).__name__)
 
     def _get_hasher(self, arg_name: str, arg: T.Any) -> Hasher:
         if arg_name in self.hashers:
