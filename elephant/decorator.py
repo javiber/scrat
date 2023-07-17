@@ -5,7 +5,7 @@ import typing as T
 from datetime import datetime
 
 from .cache import CacheManager
-from .hasher.manager import HashManager
+from .hasher import Hasher, HashManager
 from .serializer import Serializer, get_default_serializer
 from .utils import Timer
 
@@ -14,12 +14,17 @@ logger = logging.getLogger(__name__)
 
 def remember(
     serializer: T.Optional[Serializer] = None,
-    hashers=None,
-    name=None,
+    name: T.Optional[str] = None,
+    hashers: T.Optional[T.Dict[str, Hasher]] = None,
+    hash_code: T.Optional[bool] = True,
+    ignore_args: T.Optional[T.List[str]] = None,
 ):
     def deco(func):
         hash_manager = HashManager(
-            hashers=hashers, name=name if name is not None else func.__name__
+            hashers=hashers,
+            name=name if name is not None else func.__name__,
+            ignore_args=ignore_args,
+            hash_code=hash_code,
         )
         _serializer = (
             serializer if serializer is not None else get_default_serializer(func)

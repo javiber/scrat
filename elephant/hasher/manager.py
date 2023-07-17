@@ -2,7 +2,6 @@ import inspect
 import logging
 import typing as T
 from collections import OrderedDict
-from collections.abc import Iterable
 
 from elephant.utils import hash_method
 
@@ -38,14 +37,16 @@ DEFAULTS[tuple] = IterableHasher(FALLBACK)
 class HashManager:
     def __init__(
         self,
-        name: T.Optional[str],
+        name: str,
         hashers: T.Optional[T.Dict[str, Hasher]] = None,
         hash_code: T.Optional[bool] = True,
+        ignore_args: T.Optional[T.List[str]] = None,
     ) -> None:
         # TODO: enforce unique names?
         self.name = name
         self.hash_code = hash_code
-        self.hashers: T.Dict[str, Hasher] = hashers if hashers is not None else {}
+        self.hashers = hashers if hashers is not None else {}
+        self.ignore_args = set(ignore_args if ignore_args is not None else [])
 
     def hash(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
@@ -53,6 +54,8 @@ class HashManager:
         # hash arguments
         hashed_args = []
         for arg_name, arg in self._normalize_args(args, kwargs, func).items():
+            if arg_name in self.ignore_args:
+                continue
             hasher = self._get_hasher(arg_name, arg)
             logger.debug(
                 "using '%s' for argument '%s'", hasher.__class__.__name__, arg_name
