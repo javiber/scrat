@@ -68,11 +68,13 @@ class HashManager:
             hash_result = hash_method(hash_result, hashed_code)
             logger.debug("%s code hash: '%s'", self.name, hashed_code)
 
+        # hash the code of any other watched function
         if len(self.watch_functions):
             hash_result = hash_method(
                 hash_result, *[self._hash_code(f) for f in self.watch_functions]
             )
 
+        # hash any other watched global variable
         if len(self.watch_globals):
             closure = inspect.getclosurevars(func)
             global_vars = closure.globals | closure.nonlocals
