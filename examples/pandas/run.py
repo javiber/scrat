@@ -4,12 +4,12 @@ import time
 import numpy as np
 import pandas as pd
 
-import elephant as el
+import scrat as sc
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-@el.remember()
+@sc.stash()
 def slow_func(df):
     sum = 0
     for _, row in df.iterrows():

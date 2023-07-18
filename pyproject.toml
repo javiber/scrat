@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "elephant"
+name = "scrat"
 version = "0.1.0"
 description = ""
 authors = ["javiber"]
@@ -23,7 +23,7 @@ pytest-mock = "^3.11.1"
 ipdb = "^0.13.13"
 
 [tool.poetry.scripts]
-elephant = "elephant.cli:elephant"
+scrat = "scrat.cli:scrat"
 
 [build-system]
 requires = ["poetry-core"]

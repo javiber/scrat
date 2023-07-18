@@ -1,25 +1,24 @@
 import os
-from datetime import timedelta
 from pathlib import Path
 
 import click
 
-from elephant.cache import CacheConfig, CacheManager
-from elephant.db import Entry, create_db
+from scrat import Config
+from scrat.db import DBConnector
 
 
-def make_config(path) -> CacheConfig:
-    return CacheConfig.create_config_file(base_path=path)
+def make_config(path) -> Config:
+    return Config.create_config_file(base_path=path)
 
 
 def make_db(path):
-    create_db(path=path)
+    DBConnector.create_db(path=path)
 
 
 @click.command()
 def init():
     cwd = Path(os.getcwd())
-    folder = cwd / ".elephant"
+    folder = cwd / ".scrat"
 
     if os.path.exists(folder):
         click.secho("already initialized", fg="red")

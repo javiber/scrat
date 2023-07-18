@@ -1,17 +1,16 @@
 import os
 from datetime import timedelta
-from pathlib import Path
 
 import click
 from sqlalchemy.sql import exists
 
-from elephant.cache import CacheManager
-from elephant.db import Entry
-from elephant.utils import humanize_size
+from scrat.config import Config
+from scrat.db import DBConnector, Entry
+from scrat.utils import humanize_size
 
 
 @click.group()
-def cache():
+def stash():
     pass
 
 
@@ -30,8 +29,9 @@ def list():
     table.add_column("use_count")
     table.add_column("time_s")
 
-    cache_manager = CacheManager()
-    with cache_manager.db() as session:
+    config = Config.load()
+    db_connector = DBConnector(config.db_path)
+    with db_connector.session() as session:
         for entry in session.query(Entry).all():
             table.add_row(
                 entry.hash,
@@ -50,19 +50,20 @@ def list():
 
 @click.command()
 def clear():
-    cache_manager = CacheManager()
-    os.remove(cache_manager.config.db_path)
-    for file in os.listdir(cache_manager.config.cache_path):
-        os.remove(cache_manager.config.cache_path / file)
+    config = Config.load()
+    os.remove(config.db_path)
+    for file in os.listdir(config.cache_path):
+        os.remove(config.cache_path / file)
 
 
 @click.command()
 def stats():
-    cache_manager = CacheManager()
+    config = Config.load()
+    db_connector = DBConnector(config.db_path)
     seconds_saved = 0
     size = 0
     entries = 0
-    with cache_manager.db() as session:
+    with db_connector.session() as session:
         for entry in session.query(Entry).all():
             seconds_saved += entry.use_count * entry.time_s
             size += entry.size
@@ -80,21 +81,22 @@ def stats():
 
 @click.command()
 def check():
-    cache_manager = CacheManager()
-    with cache_manager.db() as session:
+    config = Config.load()
+    db_connector = DBConnector(config.db_path)
+    with db_connector.session() as session:
         for entry in session.query(Entry).all():
             if not os.path.exists(entry.path):
                 click.secho(f"Missing file '{entry.hash}'")
-        for file in os.listdir(cache_manager.config.cache_path):
+        for file in os.listdir(config.cache_path):
             if not session.query(exists().where(Entry.hash == file)).scalar():
                 click.secho(f"File not indexed: '{file}'")
 
 
-cache.add_command(list)
-cache.add_command(clear)
-cache.add_command(stats)
-cache.add_command(check)
+stash.add_command(list)
+stash.add_command(clear)
+stash.add_command(stats)
+stash.add_command(check)
 
 
 if __name__ == "__main__":
-    cache()
+    stash()

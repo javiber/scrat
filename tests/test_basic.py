@@ -2,8 +2,6 @@ import logging
 
 import pytest
 
-import elephant as el
-
 logging.basicConfig(
     level=logging.DEBUG,
     format=" %(name)s :: %(levelname)-8s :: %(message)s",
@@ -23,6 +21,24 @@ def test_no_params(patched_decorator):
         return counter
 
     cached_func = patched_decorator()(no_params_func)
+
+    assert cached_func() == 1
+    assert cached_func() == 1
+    assert counter == 1
+
+
+def test_method(patched_decorator):
+    counter = 0
+
+    class A:
+        def f(self):
+            nonlocal counter
+            counter += 1
+            return 1
+
+    a = A()
+
+    cached_func = patched_decorator()(a.f)
 
     assert cached_func() == 1
     assert cached_func() == 1
@@ -138,7 +154,7 @@ def test_var_args(patched_decorator):
     assert cached_func(1, b=2) == 3
     assert counter == 2
 
-    # for these types of function elephant can't know if
+    # for these types of function scrat can't know if
     # f(1, 2) is the same as f(1, b=2) so it's run again
     assert cached_func(1, 2) == 3
     assert counter == 3

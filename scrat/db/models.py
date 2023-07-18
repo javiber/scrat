@@ -1,9 +1,7 @@
-import os
 import typing as T
 from datetime import datetime
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
@@ -24,10 +22,3 @@ class Entry(Base):
 
     def __repr__(self) -> str:
         return f"Entry(hash={self.hash!r}, path={self.path!r})"
-
-
-def create_db(path) -> T.Callable[[], Session]:
-    engine = create_engine("sqlite:///" + str(path))
-    Base.metadata.create_all(engine)
-
-    return sessionmaker(engine)

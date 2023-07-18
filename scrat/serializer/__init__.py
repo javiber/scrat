@@ -1,13 +1,13 @@
-import inspect
-
 from .base import Serializer  # NoQA
 from .pandas import PandasSerializer
 from .pickle import PickleSerializer
 
-DEFAULT_SERIALIZERS = {"DataFrame": PandasSerializer}
+DEFAULT_SERIALIZERS = {"DataFrame": PandasSerializer()}
 
 
 def get_default_serializer(func):
+    import inspect
+
     sign = inspect.signature(func)
     if hasattr(sign, "return_annotations"):
         return DEFAULT_SERIALIZERS.get(

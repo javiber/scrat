@@ -1,6 +1,6 @@
 import typing as T
 
-from elephant.utils import hash_method
+from scrat.utils import hash_method
 
 from .base import Hasher
 

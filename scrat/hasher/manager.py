@@ -3,7 +3,7 @@ import logging
 import typing as T
 from collections import OrderedDict
 
-from elephant.utils import hash_method
+from scrat.utils import hash_method
 
 from .base import Hasher
 from .iterable import IterableHasher
@@ -37,7 +37,6 @@ DEFAULTS[tuple] = IterableHasher(FALLBACK)
 class HashManager:
     def __init__(
         self,
-        name: str,
         hashers: T.Optional[T.Dict[str, Hasher]] = None,
         hash_code: T.Optional[bool] = True,
         ignore_args: T.Optional[T.List[str]] = None,
@@ -45,7 +44,6 @@ class HashManager:
         watch_globals: T.Optional[T.List[str]] = None,
     ) -> None:
         # TODO: enforce unique names?
-        self.name = name
         self.hash_code = hash_code
         self.hashers = hashers if hashers is not None else {}
         self.ignore_args = set(ignore_args if ignore_args is not None else [])
@@ -60,13 +58,11 @@ class HashManager:
         for arg_name, arg_value in self._normalize_args(args, kwargs, func).items():
             hashed_args.append(self.hash_argument(arg_name, arg_value))
         hash_result = hash_method(*hashed_args)
-        logger.debug("%s arguments hash: '%s'", self.name, hash_result)
 
         # hash funcion's code if necessary
         if self.hash_code:
             hashed_code = self._hash_code(func)
             hash_result = hash_method(hash_result, hashed_code)
-            logger.debug("%s code hash: '%s'", self.name, hashed_code)
 
         # hash the code of any other watched function
         if len(self.watch_functions):
@@ -85,9 +81,6 @@ class HashManager:
 
             hash_result = hash_method(hash_result, *globals_hash)
 
-        # prepend name for traceability
-        hash_result = "_".join([self.name, hash_result])
-        logger.debug("%s final hash: '%s'", self.name, hash_result)
         return hash_result
 
     def hash_argument(self, name, value):
