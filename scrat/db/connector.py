@@ -14,6 +14,7 @@ class DBConnector:
 
     def __init__(self, path) -> None:
         self.engine = create_engine("sqlite:///" + str(path))
+        Base.metadata.create_all(self.engine)
         self.session_maker = sessionmaker(self.engine)
 
     def session(self) -> Session:

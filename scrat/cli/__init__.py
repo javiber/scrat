@@ -1,6 +1,6 @@
 import click
 
-from .setup import init
+from .setup import deinit, init
 from .stash import stash
 
 
@@ -10,6 +10,7 @@ def scrat():
 
 
 scrat.add_command(init)
+scrat.add_command(deinit)
 scrat.add_command(stash)
 
 if __name__ == "__main__":

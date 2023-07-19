@@ -2,7 +2,7 @@ import os
 from datetime import timedelta
 
 import click
-from sqlalchemy.sql import exists
+from sqlalchemy.sql import exists, select
 
 from scrat.config import Config
 from scrat.db import DBConnector, Entry
@@ -14,50 +14,91 @@ def stash():
     pass
 
 
-@click.command()
-def list():
-    from rich.console import Console
-    from rich.table import Table
+COLUMNS = [
+    "hash",
+    "name",
+    "path",
+    "created_at",
+    "used_at",
+    "size_mb",
+    "use_count",
+    "time_s",
+]
 
-    table = Table(title="Entries")
-    table.add_column("hash")
-    table.add_column("name")
-    table.add_column("path")
-    table.add_column("created_at")
-    table.add_column("used_at")
-    table.add_column("size_mb")
-    table.add_column("use_count")
-    table.add_column("time_s")
 
+def format_datetime(datetime):
+    if datetime is not None:
+        return datetime.isoformat(timespec="minutes", sep=" ")
+    return ""
+
+
+@stash.command()
+@click.option(
+    "-s",
+    "--sort-by",
+    type=click.Choice(COLUMNS),
+    default="created_at",
+    help="Column to sort by",
+)
+@click.option(
+    "-d", "--desc", default=False, is_flag=True, help="Use to sort descending"
+)
+def list(sort_by, desc):
+    """List content of stash"""
     config = Config.load()
     db_connector = DBConnector(config.db_path)
     with db_connector.session() as session:
-        for entry in session.query(Entry).all():
-            table.add_row(
-                entry.hash,
-                entry.name,
-                entry.path,
-                entry.created_at.isoformat(),
-                entry.used_at.isoformat() if entry.used_at is not None else "None",
-                str(entry.size),
-                str(entry.use_count),
-                str(entry.time_s),
+        sorting = getattr(Entry, sort_by)
+        if desc:
+            sorting = sorting.desc()
+        click.secho(f"{'name':<10} {'hash':<32} {'created_at':<16} {'size':5}")
+
+        for entry in session.query(Entry).order_by(sorting).all():
+            click.secho(
+                (
+                    f"{entry.name:<10} {entry.hash} {format_datetime(entry.created_at)} "
+                    f"{humanize_size(entry.size)}"
+                )
             )
 
-    console = Console()
-    console.print(table)
 
-
-@click.command()
-def clear():
+@stash.command()
+@click.argument("hash_key", help="the hash of the entry to remove")
+def delete(hash_key):
+    """Removes one entry from the stash"""
     config = Config.load()
-    os.remove(config.db_path)
+    db_connector = DBConnector(config.db_path)
+    with db_connector.session() as session:
+        entry = session.scalar(select(Entry).where(Entry.hash == hash_key))
+        if entry is None:
+            click.secho("Entry does not exists", fg="red")
+            exit(-1)
+        try:
+            os.remove(entry.path)
+        except FileNotFoundError:
+            pass
+        session.query(Entry).filter_by(hash=hash_key).delete()
+        session.commit()
+
+
+@stash.command()
+def clear():
+    """Empty the stash"""
+    config = Config.load()
+    click.confirm(
+        "This will remove everything from the stash are you sure?", abort=True
+    )
+    try:
+        os.remove(config.db_path)
+    except FileNotFoundError:
+        click.secho("DB not found")
     for file in os.listdir(config.cache_path):
         os.remove(config.cache_path / file)
 
 
-@click.command()
+@stash.command()
 def stats():
+    """Print stash stats"""
     config = Config.load()
     db_connector = DBConnector(config.db_path)
     seconds_saved = 0
@@ -79,8 +120,9 @@ def stats():
         click.secho(f"time saved: {timedelta(seconds=seconds_saved)}")
 
 
-@click.command()
+@stash.command()
 def check():
+    """Check the integrity of the stash"""
     config = Config.load()
     db_connector = DBConnector(config.db_path)
     with db_connector.session() as session:
@@ -90,12 +132,6 @@ def check():
         for file in os.listdir(config.cache_path):
             if not session.query(exists().where(Entry.hash == file)).scalar():
                 click.secho(f"File not indexed: '{file}'")
-
-
-stash.add_command(list)
-stash.add_command(clear)
-stash.add_command(stats)
-stash.add_command(check)
 
 
 if __name__ == "__main__":

@@ -20,17 +20,17 @@ class Config:
     force: bool = False
     disable: bool = False
 
-    _db_file: str = "cache.db"
-    _cache_dir: str = "cache"
-    _config_file: str = "config.yaml"
+    db_file: str = "stash.db"
+    stash_dir: str = "stash"
+    config_file: str = "config.yaml"
 
     @property
-    def cache_path(self) -> Path:
-        return self.base_path / self._cache_dir
+    def stash_path(self) -> Path:
+        return self.base_path / self.stash_dir
 
     @property
     def db_path(self) -> Path:
-        return self.base_path / self._db_file
+        return self.base_path / self.db_file
 
     # TODO: find a way to automatically save and load to/from yaml
     @classmethod
@@ -44,7 +44,7 @@ class Config:
             if not os.path.isdir(base_path):
                 raise ValueError("couldn't find folder")
 
-        with open(base_path / cls._config_file) as f:
+        with open(base_path / cls.config_file) as f:
             config_dict = yaml.load(f, Loader=yaml.Loader)
 
         return cls(
@@ -59,7 +59,7 @@ class Config:
     @classmethod
     def create_config_file(cls, base_path: Path, *args, **kwargs):
         config = cls(base_path=base_path, *args, **kwargs)
-        with open(base_path / cls._config_file, "w") as f:
+        with open(base_path / cls.config_file, "w") as f:
             yaml.dump(
                 {
                     "base_path": str(config.base_path.absolute()),
@@ -73,20 +73,20 @@ class Config:
 
     @property
     def cache_path(self) -> Path:
-        return self.base_path / self._cache_dir
+        return self.base_path / self.stash_dir
 
     @property
     def db_path(self) -> Path:
-        return self.base_path / self._db_file
+        return self.base_path / self.db_file
 
     @property
     def config_path(self) -> Path:
-        return self.base_path / self._config_file
+        return self.base_path / self.config_file
 
     @classmethod
     def create_config_file(cls, base_path: Path, *args, **kwargs):
         config = cls(base_path=base_path, *args, **kwargs)
-        with open(base_path / cls._config_file, "w") as f:
+        with open(base_path / cls.config_file, "w") as f:
             yaml.dump(
                 {
                     "base_path": str(config.base_path.absolute()),
