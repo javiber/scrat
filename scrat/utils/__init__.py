@@ -2,7 +2,7 @@ import hashlib
 import typing as T
 from pathlib import Path
 
-from .timer import Timer
+from .timer import Timer  # noqa
 
 PathLike = T.Union[str, Path]
 
@@ -24,3 +24,4 @@ def humanize_size(size: int) -> str:
     for exp, suffix in _SUFFIXES:
         if size >= base**exp:
             return f"{size/base**exp:.1f}{suffix}"
+    raise ValueError("could not format int %s", int)

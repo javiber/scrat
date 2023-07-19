@@ -1,6 +1,6 @@
-from .base import Hasher
-from .iterable import IterableHasher
-from .manager import HashManager
-from .numpy import NumpyHasher
-from .pandas import PandasHasher
-from .to_string import ToStringHasher
+from .base import Hasher  # noqa
+from .iterable import IterableHasher  # noqa
+from .manager import HashManager  # noqa
+from .numpy import NumpyHasher  # noqa
+from .pandas import PandasHasher  # noqa
+from .to_string import ToStringHasher  # noqa

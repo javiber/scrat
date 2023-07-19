@@ -66,7 +66,7 @@ class Squirrel:
             entry = session.scalar(select(Entry).where(Entry.hash == hash_key))
             result = self.serializer.load(Path(entry.path))
             entry.use_count = entry.use_count + 1
-            entry.used_at: datetime.now()
+            entry.used_at = datetime.now()
             session.commit()
         return result
 

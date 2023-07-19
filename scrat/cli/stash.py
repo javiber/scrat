@@ -56,7 +56,8 @@ def list(sort_by, desc):
         for entry in session.query(Entry).order_by(sorting).all():
             click.secho(
                 (
-                    f"{entry.name:<10} {entry.hash} {format_datetime(entry.created_at)} "
+                    f"{entry.name:<10} {entry.hash} "
+                    f"{format_datetime(entry.created_at)} "
                     f"{humanize_size(entry.size)}"
                 )
             )

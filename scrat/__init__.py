@@ -1,4 +1,4 @@
-from .squirrel import Squirrel
-from .config import Config
-from .decorator import stash
-from .hasher import *
+from .config import Config  # noqa
+from .decorator import stash  # noqa
+from .hasher import *  # noqa
+from .squirrel import Squirrel  # noqa
