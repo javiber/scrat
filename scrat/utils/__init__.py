@@ -8,7 +8,7 @@ PathLike = T.Union[str, Path]
 
 
 def hash_method(*args) -> str:
-    h = hashlib.sha1()
+    h = hashlib.md5(usedforsecurity=False)
     for value in args:
         if isinstance(value, str):
             value = value.encode()
