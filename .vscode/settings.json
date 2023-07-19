@@ -13,4 +13,5 @@
         "black"
     ],
     "python.linting.flake8Enabled": true,
+    "autoDocstring.docstringFormat": "numpy-notypes",
 }

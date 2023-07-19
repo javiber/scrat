@@ -22,6 +22,33 @@ def stash(
     force: T.Optional[bool] = None,
     disable: T.Optional[bool] = None,
 ):
+    """Wraps a function to stash the results
+
+    Parameters
+    ----------
+    serializer, optional
+        Select a serializer for the function's result, by default `PickleSerializer`
+        is used
+    name, optional
+        Name that identifies this function, by default the function __name__ is used
+    hashers, optional
+        Dictionary specifying hashers used for the argiments, by default None
+    hash_code, optional
+        Control if the function's code should be used in the hash, by default True
+    ignore_args, optional
+        List of arguments to ignore from the hash, by default None
+    watch_functions, optional
+        List of functions which code will be included in the hash, by default None
+    watch_globals, optional
+        List of global variables to include in the hash, by default None
+    force, optional
+        If set to True the saved result is ignored, the function called and the result
+        overritten, by default the value on `scrat.Setting.force` is used
+    disable, optional
+        If set to True the saved result is ignored, the function called and the new
+        result is also ignored, by default the value on `scrat.Setting.disable` is used
+    """
+
     def deco(func):
         squirrel = Squirrel(
             hashers=hashers,
