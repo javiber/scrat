@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 
 from scrat import stash
 from scrat.db import DBConnector
+from scrat.config import Config
+import os
 
 
 @pytest.fixture
@@ -16,6 +18,11 @@ def in_memory_engine():
 @pytest.fixture
 def patched_decorator(mocker, in_memory_engine):
     mocker.patch("scrat.db.connector.create_engine", lambda _: in_memory_engine)
-    mocker.patch("scrat.config.Config.cache_path", Path(gettempdir()))
+    tmp_folder = gettempdir()
+    mocker.patch(
+        "scrat.config.Config.load", lambda *_: Config(base_path=Path(tmp_folder))
+    )
+    config = Config.load()
+    os.makedirs(config.cache_path, exist_ok=True)
     DBConnector.create_db("")
     return stash

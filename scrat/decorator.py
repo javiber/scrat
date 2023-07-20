@@ -2,7 +2,7 @@ import functools
 import logging
 import typing as T
 
-from scrat import Squirrel
+from .squirrel import Squirrel
 
 from .hasher import Hasher
 from .serializer import Serializer, get_default_serializer

@@ -77,7 +77,6 @@ class Squirrel:
 
         logger.debug("Storing '%s' for %s", hash_key, self.name)
         path = self.config.cache_path / f"{self.name}_{hash_key}"
-
         self.serializer.dump(result, path)
         file_size = round(os.stat(path).st_size)
 

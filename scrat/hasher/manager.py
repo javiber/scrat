@@ -73,7 +73,8 @@ class HashManager:
         # hash any other watched global variable
         if len(self.watch_globals):
             closure = inspect.getclosurevars(func)
-            global_vars = closure.globals | closure.nonlocals
+            global_vars = closure.globals.copy()
+            global_vars.update(closure.nonlocals)
             globals_hash = []
             for global_name in self.watch_globals:
                 gloval_value = global_vars[global_name]
