@@ -30,3 +30,13 @@ expensive_function(2)  # <- function called again beacuse the parameters changed
 - Customizable to allow other serializers to store any kind of result efficiently
 - Customizable to hash any type of parameter efficiently
 - CLI to control stash
+
+
+## Concepts
+- `Scrat` is a famous pre-historic squirrel with some bad luck
+- `Stash` is composed of a folder where results are saved and a database to index them
+- A `Nut` is one of the entries in the database
+- The `Squirrel` is in charge of fetching and stashing the nuts
+- `Serializer` dumps results to files and load them back to memory
+- `Hasher` creates unique hashes for a parameter value
+- `HashManager` coordinates hashes of all arguments and functon code

@@ -139,7 +139,7 @@ class HashManager:
             elif param.kind == param.KEYWORD_ONLY:
                 # NOTE: Value must be supplied as a keyword argument.
                 #       Keyword only parameters are those which appear after a * or
-                #       *args entry in a Python function definition.
+                #       *args nut in a Python function definition.
 
                 # If the param is keyword only then it must be passed as a kwarg,
                 # however we are not enforncing it here so that we don't fail and

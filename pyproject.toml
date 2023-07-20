@@ -1,9 +1,27 @@
 [tool.poetry]
 name = "scrat"
 version = "0.1.0"
-description = ""
-authors = ["javiber"]
+description = "Easily stash the results of expensive functions to disk"
+authors = ["javiber <javier.berneche@gmail.com>"]
 readme = "README.md"
+license = "BSD-3-Clause"
+repository = "https://github.com/javiber/scrat"
+
+
+keywords = [
+    "cache",
+    "disk",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+]
+
+
 
 [tool.isort]
 profile = "black"

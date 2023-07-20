@@ -6,7 +6,7 @@ from pathlib import Path
 
 from sqlalchemy.sql import exists, select
 
-from scrat.db import DBConnector, Entry
+from scrat.db import DBConnector, Nut
 
 from .config import Config
 from .hasher import Hasher, HashManager
@@ -57,16 +57,16 @@ class Squirrel:
             return False
 
         with self.db_connector.session() as session:
-            return session.query(exists().where(Entry.hash == hash_key)).scalar()
+            return session.query(exists().where(Nut.hash == hash_key)).scalar()
 
     def fetch(self, hash_key):
         logger.debug("Fetching '%s' for %s", hash_key, self.name)
 
         with self.db_connector.session() as session:
-            entry = session.scalar(select(Entry).where(Entry.hash == hash_key))
-            result = self.serializer.load(Path(entry.path))
-            entry.use_count = entry.use_count + 1
-            entry.used_at = datetime.now()
+            nut = session.scalar(select(Nut).where(Nut.hash == hash_key))
+            result = self.serializer.load(Path(nut.path))
+            nut.use_count = nut.use_count + 1
+            nut.used_at = datetime.now()
             session.commit()
         return result
 
@@ -82,7 +82,7 @@ class Squirrel:
         file_size = round(os.stat(path).st_size)
 
         with self.db_connector.session() as session:
-            entry = Entry(
+            nut = Nut(
                 hash=hash_key,
                 name=self.name,
                 path=str(path),
@@ -92,5 +92,5 @@ class Squirrel:
                 use_count=0,
                 time_s=time_s,
             )
-            session.add(entry)
+            session.add(nut)
             session.commit()

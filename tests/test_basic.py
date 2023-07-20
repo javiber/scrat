@@ -181,7 +181,7 @@ def test_code_changes(patched_decorator):
     assert cached_func() == 1
     assert counter == 1
 
-    # a new function with the same name and code should re-use the entry
+    # a new function with the same name and code should re-use the nut
     def code_changes_func():
         nonlocal counter
         counter += 1
@@ -193,7 +193,7 @@ def test_code_changes(patched_decorator):
     assert cached_func() == 1
     assert counter == 1
 
-    # a new function with the same name but different code should create a new entry
+    # a new function with the same name but different code should create a new nut
     def code_changes_func():
         nonlocal counter
         counter += 1

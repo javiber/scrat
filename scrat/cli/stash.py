@@ -5,7 +5,7 @@ import click
 from sqlalchemy.sql import exists, select
 
 from scrat.config import Config
-from scrat.db import DBConnector, Entry
+from scrat.db import DBConnector, Nut
 from scrat.utils import humanize_size
 
 
@@ -48,37 +48,37 @@ def list(sort_by, desc):
     config = Config.load()
     db_connector = DBConnector(config.db_path)
     with db_connector.session() as session:
-        sorting = getattr(Entry, sort_by)
+        sorting = getattr(Nut, sort_by)
         if desc:
             sorting = sorting.desc()
         click.secho(f"{'name':<10} {'hash':<32} {'created_at':<16} {'size':5}")
 
-        for entry in session.query(Entry).order_by(sorting).all():
+        for nut in session.query(Nut).order_by(sorting).all():
             click.secho(
                 (
-                    f"{entry.name:<10} {entry.hash} "
-                    f"{format_datetime(entry.created_at)} "
-                    f"{humanize_size(entry.size)}"
+                    f"{nut.name:<10} {nut.hash} "
+                    f"{format_datetime(nut.created_at)} "
+                    f"{humanize_size(nut.size)}"
                 )
             )
 
 
 @stash.command()
-@click.argument("hash_key", help="the hash of the entry to remove")
+@click.argument("hash_key", help="the hash of the nut to remove")
 def delete(hash_key):
-    """Removes one entry from the stash"""
+    """Removes one nut from the stash"""
     config = Config.load()
     db_connector = DBConnector(config.db_path)
     with db_connector.session() as session:
-        entry = session.scalar(select(Entry).where(Entry.hash == hash_key))
-        if entry is None:
-            click.secho("Entry does not exists", fg="red")
+        nut = session.scalar(select(Nut).where(Nut.hash == hash_key))
+        if nut is None:
+            click.secho("Nut does not exists", fg="red")
             exit(-1)
         try:
-            os.remove(entry.path)
+            os.remove(nut.path)
         except FileNotFoundError:
             pass
-        session.query(Entry).filter_by(hash=hash_key).delete()
+        session.query(Nut).filter_by(hash=hash_key).delete()
         session.commit()
 
 
@@ -106,9 +106,9 @@ def stats():
     size = 0
     entries = 0
     with db_connector.session() as session:
-        for entry in session.query(Entry).all():
-            seconds_saved += entry.use_count * entry.time_s
-            size += entry.size
+        for nut in session.query(Nut).all():
+            seconds_saved += nut.use_count * nut.time_s
+            size += nut.size
             entries += 1
 
     click.secho(f"Total entries: {entries}")
@@ -127,11 +127,11 @@ def check():
     config = Config.load()
     db_connector = DBConnector(config.db_path)
     with db_connector.session() as session:
-        for entry in session.query(Entry).all():
-            if not os.path.exists(entry.path):
-                click.secho(f"Missing file '{entry.hash}'")
+        for nut in session.query(Nut).all():
+            if not os.path.exists(nut.path):
+                click.secho(f"Missing file '{nut.hash}'")
         for file in os.listdir(config.cache_path):
-            if not session.query(exists().where(Entry.hash == file)).scalar():
+            if not session.query(exists().where(Nut.hash == file)).scalar():
                 click.secho(f"File not indexed: '{file}'")
 
 

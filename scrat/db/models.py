@@ -8,8 +8,8 @@ class Base(DeclarativeBase):
     pass
 
 
-class Entry(Base):
-    __tablename__ = "entry"
+class Nut(Base):
+    __tablename__ = "nut"
     hash: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
     path: Mapped[str]
@@ -21,4 +21,4 @@ class Entry(Base):
     time_s: Mapped[int]
 
     def __repr__(self) -> str:
-        return f"Entry(hash={self.hash!r}, path={self.path!r})"
+        return f"Nut(hash={self.hash!r}, path={self.path!r})"
