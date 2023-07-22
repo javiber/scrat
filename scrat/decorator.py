@@ -2,10 +2,9 @@ import functools
 import logging
 import typing as T
 
-from .squirrel import Squirrel
-
 from .hasher import Hasher
 from .serializer import Serializer, get_default_serializer
+from .squirrel import Squirrel
 from .utils import Timer
 
 logger = logging.getLogger(__name__)

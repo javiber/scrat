@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from tempfile import gettempdir
 
@@ -5,9 +6,8 @@ import pytest
 from sqlalchemy import create_engine
 
 from scrat import stash
-from scrat.db import DBConnector
 from scrat.config import Config
-import os
+from scrat.db import DBConnector
 
 
 @pytest.fixture
