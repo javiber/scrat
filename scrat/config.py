@@ -45,12 +45,12 @@ class Config:
     def load(cls, base_path: T.Optional[Path] = None) -> "Config":
         if base_path is None:
             # Search '.scrat' folder starting from the CWD and walking up
-            base_path = Path(os.getcwd()) / ".scrat"
-            while not os.path.isdir(base_path) and base_path.parent != base_path:
-                base_path = base_path.parent
-            # TODO: better error messages
-            if not os.path.isdir(base_path):
-                raise ValueError("couldn't find folder")
+            cwd = Path(os.getcwd())
+            while not os.path.isdir(cwd / ".scrat") and cwd.parent != cwd:
+                cwd = cwd.parent
+            if not os.path.isdir(cwd / ".scrat"):
+                raise ValueError("Scrat is not initialized, did you run `scrat init`")
+            base_path = cwd / ".scrat"
 
         with open(base_path / cls.config_file) as f:
             config_dict = yaml.load(f, Loader=yaml.Loader)

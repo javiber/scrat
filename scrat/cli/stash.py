@@ -64,7 +64,7 @@ def list(sort_by, desc):
 
 
 @stash.command()
-@click.argument("hash_key", help="the hash of the nut to remove")
+@click.argument("hash_key")
 def delete(hash_key):
     """Removes one nut from the stash"""
     config = Config.load()
