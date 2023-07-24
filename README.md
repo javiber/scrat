@@ -1,6 +1,6 @@
 # Scrat
 
-Efficient Caching of Expensive Function Results
+Persistent Caching of Expensive Function Results
 
 ![🐿️](imgs/scrat.png)
 
