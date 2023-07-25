@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from tempfile import gettempdir
@@ -8,6 +9,12 @@ from sqlalchemy import create_engine
 from scrat import stash
 from scrat.config import Config
 from scrat.db import DBConnector
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format=" %(name)s :: %(levelname)-8s :: %(message)s",
+    force=True,
+)
 
 
 @pytest.fixture

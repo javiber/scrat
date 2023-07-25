@@ -9,6 +9,7 @@ import yaml
 
 class DeletionMethod(Enum):
     lru = "lru"
+    lfu = "lfu"
 
 
 @dataclass(frozen=True)

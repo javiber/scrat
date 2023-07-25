@@ -20,8 +20,9 @@ def stash(
     watch_globals: T.Optional[T.List[str]] = None,
     force: T.Optional[bool] = None,
     disable: T.Optional[bool] = None,
+    max_size: T.Optional[int] = None,
 ):
-    """Wraps a function to stash the results
+    """Wrap a function to stash the results
 
     Parameters
     ----------
@@ -61,6 +62,7 @@ def stash(
             else get_default_serializer(func),
             force=force,
             disable=disable,
+            max_size=max_size,
         )
 
         timer = Timer()

@@ -1,12 +1,5 @@
-import logging
-
 import pytest
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=" %(name)s :: %(levelname)-8s :: %(message)s",
-    force=True,
-)
 # TODO: The method of a nonlocal counter is not great
 #       There should be a way to setup a fixture or a mock
 #       to check how many times the underlying function is called

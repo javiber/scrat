@@ -16,7 +16,7 @@ def hash_method(*args) -> str:
     return h.hexdigest()
 
 
-_SUFFIXES = list(reversed(list(enumerate(["B", "KB", "GB"]))))
+_SUFFIXES = list(reversed(list(enumerate(["B", "KB", "MB", "GB"]))))
 
 
 def humanize_size(size: int) -> str:

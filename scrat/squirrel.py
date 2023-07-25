@@ -4,11 +4,11 @@ import typing as T
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy.sql import exists, select
+from sqlalchemy.sql import exists, func, select
 
 from scrat.db import DBConnector, Nut
 
-from .config import Config
+from .config import Config, DeletionMethod
 from .hasher import Hasher, HashManager
 from .serializer import Serializer
 
@@ -27,11 +27,13 @@ class Squirrel:
         watch_globals: T.Optional[T.List[str]] = None,
         force: T.Optional[bool] = None,
         disable: T.Optional[bool] = None,
+        max_size: T.Optional[int] = None,
     ) -> None:
         self.config = Config.load()
         self.name = name
         self.force = force if force is not None else self.config.force
         self.disable = disable if disable is not None else self.config.disable
+        self.max_size = max_size
         self.db_connector = DBConnector(self.config.db_path)
         self.hash_manager = HashManager(
             hashers=hashers,
@@ -75,12 +77,52 @@ class Squirrel:
             logger.debug("Scrat is disable, not saving")
             return
 
-        logger.debug("Storing '%s' for %s", hash_key, self.name)
-        path = self.config.cache_path / f"{self.name}_{hash_key}"
-        self.serializer.dump(result, path)
-        file_size = round(os.stat(path).st_size)
-
         with self.db_connector.session() as session:
+            if self.max_size is not None:
+                current_size, count = (
+                    session.query(func.sum(Nut.size), func.count(Nut.hash))
+                    .filter(Nut.name == self.name)
+                    .first()
+                )
+                if count == 0:
+                    current_size = 0
+
+                while current_size >= self.max_size:
+                    logger.debug("Size limit hit, freeing space")
+
+                    if self.config.deletion_method == DeletionMethod.lru:
+                        to_delete = (
+                            session.query(Nut)
+                            .filter(Nut.name == self.name)
+                            .order_by(func.ifnull(Nut.used_at, Nut.created_at))
+                            .first()
+                        )
+                        logger.info("Removing %s", to_delete)
+
+                    elif self.config.deletion_method == DeletionMethod.lru:
+                        to_delete = (
+                            session.query(Nut)
+                            .filter(Nut.name == self.name)
+                            .order_by(Nut.use_count)
+                            .first()
+                        )
+                        logger.info("Removing %s", to_delete)
+                    else:
+                        logger.error(
+                            "Incorrect DeletionMethod %s", self.config.deletion_method
+                        )
+                        break
+
+                    os.remove(to_delete.path)
+                    session.delete(to_delete)
+                    session.commit()
+                    current_size -= to_delete.size
+
+            logger.debug("Storing '%s' for %s", hash_key, self.name)
+            path = self.config.cache_path / f"{self.name}_{hash_key}"
+            self.serializer.dump(result, path)
+            file_size = round(os.stat(path).st_size)
+
             nut = Nut(
                 hash=hash_key,
                 name=self.name,
