@@ -21,4 +21,4 @@ class Nut(Base):
     time_s: Mapped[int]
 
     def __repr__(self) -> str:
-        return f"Nut(hash={self.hash!r}, path={self.path!r})"
+        return f"Nut(name={self.name!r}, hash={self.hash!r})"
