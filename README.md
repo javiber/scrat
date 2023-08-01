@@ -28,7 +28,7 @@ expensive_function(2)  # <- function called again beacuse the parameters changed
 - Seamlessly stores the results of expensive functions to disk for future reuse.
 - Automatically re-evaluates the function if the parameters or function code have changed, ensuring up-to-date results.
 - Saves any result using the pickle.
-- Improved storage of pandas DataFrames.
+- Improved storage of pandas DataFrames, Series, and Numpy arrays.
 - Customizable support for alternative serializers.
 - Flexible parameter hashing mechanism to efficiently handle any parameter type.
 - Command-line interface (CLI) for convenient control and management of the caching functionality.
