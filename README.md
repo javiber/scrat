@@ -34,6 +34,23 @@ expensive_function(2)  # <- function called again beacuse the parameters changed
 - Command-line interface (CLI) for convenient control and management of the caching functionality.
 
 
+## Similar Projects
+
+### lru_cache
+Great and fast memoize provided by the standard library `functools`, unfurtunately results are stored in memory so they can't be reused in different runs.
+
+### cachetools
+Provides alternatives to `lru_cache` but it also works in-memory.
+
+### Joblib
+
+Joblib is a stablished library that provides great functionality for parallelization and caching. The Memory module provides an excelent alternative to Scrat, but it does have some limitations:
+- Hard to avoid using pickle
+- Lack of options to control the cache size and policies
+- Lack of tools to inspect and cleanup the cache
+
+These are the problems that scrat aims to improve, however, I'd recommend using Joblib in production since it's much more mature than Scrat at the moment.
+
 ## Concepts
 - `Scrat` is a famous pre-historic squirrel with some bad luck
 - `Stash` is composed of a folder where results are saved and a database to index them
