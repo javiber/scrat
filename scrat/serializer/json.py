@@ -1,9 +1,9 @@
-import pickle
+import json
 import typing as T
 from pathlib import Path
 
 
-class PickleSerializer:
+class JsonSerializer:
     def __init__(
         self,
         dump_kwargs: T.Optional[T.Dict[str, T.Any]] = None,
@@ -14,8 +14,8 @@ class PickleSerializer:
 
     def dump(self, obj: T.Any, path: Path):
         with open(path, "wb") as f:
-            pickle.dump(obj, f, **self.dump_kwargs)
+            json.dump(obj, f, **self.dump_kwargs)
 
     def load(self, path: Path) -> T.Any:
         with open(path, "rb") as f:
-            return pickle.load(f, **self.load_kwargs)
+            return json.load(f, **self.load_kwargs)
