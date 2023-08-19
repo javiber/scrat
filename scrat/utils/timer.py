@@ -2,6 +2,8 @@ import time
 
 
 class Timer:
+    "Simple timer."
+
     def __init__(self) -> None:
         self._start_time = None
 

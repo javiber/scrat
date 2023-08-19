@@ -2,7 +2,7 @@
 
 Persistent Caching of Expensive Function Results
 
-![🐿️](imgs/scrat.png)
+![🐿️](docs/imgs/scrat.png)
 
 ## Get Started
 

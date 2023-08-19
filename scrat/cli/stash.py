@@ -51,12 +51,13 @@ def list(sort_by, desc):
         sorting = getattr(Nut, sort_by)
         if desc:
             sorting = sorting.desc()
-        click.secho(f"{'name':<10} {'hash':<32} {'created_at':<16} {'size':5}")
+        click.secho(f"{'name':<15} {'hash':<32} {'created_at':<16} {'size':5}")
 
         for nut in session.query(Nut).order_by(sorting).all():
             click.secho(
                 (
-                    f"{nut.name:<10} {nut.hash} "
+                    f"{nut.name if len(nut.name) <= 15 else nut.name[:13] + '..' :<15} "
+                    f"{nut.hash} "
                     f"{format_datetime(nut.created_at)} "
                     f"{humanize_size(nut.size)}"
                 )

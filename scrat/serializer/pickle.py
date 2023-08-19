@@ -4,6 +4,17 @@ from pathlib import Path
 
 
 class PickleSerializer:
+    """
+    Pickle serializer.
+
+    Parameters
+    ----------
+    dump_kwargs
+        Extra arguments for pickle.dump, by default None
+    load_kwargs
+        Extra arguments for pickle.load, by default None
+    """
+
     def __init__(
         self,
         dump_kwargs: T.Optional[T.Dict[str, T.Any]] = None,

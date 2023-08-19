@@ -6,6 +6,20 @@ if T.TYPE_CHECKING:
 
 
 class NumpySerializer:
+    """
+    Serializer for numpy arrays.
+
+    In order to use this Serializer numpy needs to be installed.
+
+
+    Parameters
+    ----------
+    save_kwargs
+        Extra arguments for numpy.save, by default None
+    load_kwargs
+        Extra arguments for numpy.load, by default None
+    """
+
     def __init__(
         self,
         save_kwargs: T.Optional[T.Dict[str, T.Any]] = None,

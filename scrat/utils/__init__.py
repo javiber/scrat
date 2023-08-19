@@ -1,4 +1,3 @@
-import hashlib
 import typing as T
 from pathlib import Path
 
@@ -7,19 +6,11 @@ from .timer import Timer  # noqa
 PathLike = T.Union[str, Path]
 
 
-def hash_method(*args) -> str:
-    h = hashlib.md5()
-    for value in args:
-        if isinstance(value, str):
-            value = value.encode()
-        h.update(value)
-    return h.hexdigest()
-
-
 _SUFFIXES = list(reversed(list(enumerate(["B", "KB", "MB", "GB"]))))
 
 
 def humanize_size(size: int) -> str:
+    "Format file size in bytes into a human-readable string"
     base = 1024
     for exp, suffix in _SUFFIXES:
         if size >= base**exp:

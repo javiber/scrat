@@ -1,3 +1,4 @@
+"Scrat CLI"
 import click
 
 from .setup import deinit, init

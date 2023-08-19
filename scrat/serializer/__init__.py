@@ -1,6 +1,9 @@
-from .base import Serializer  # noqa: F401
+"Module containing all Serializers"
+import typing as T
+
+from .base import Serializer
 from .dill import DillSerializer  # noqa: F401
-from .json import JsonSerializer
+from .json import JsonSerializer  # noqa: F401
 from .numpy import NumpySerializer
 from .pandas import PandasSerializer
 from .pickle import PickleSerializer
@@ -12,7 +15,21 @@ DEFAULT_SERIALIZERS = {
 }
 
 
-def get_default_serializer(func):
+def get_default_serializer(func: T.Callable) -> Serializer:
+    """
+    Try to find a sane serializer using the function's typehint.
+
+    Defaults to `PickleSerializer`
+
+    Parameters
+    ----------
+    func
+        The user function to be called
+
+    Returns
+    -------
+        An instance of the chosen Serializer
+    """
     import inspect
 
     sign = inspect.signature(func)
@@ -22,3 +39,13 @@ def get_default_serializer(func):
         )()
 
     return PickleSerializer()
+
+
+__all__ = [
+    "Serializer",
+    "PickleSerializer",
+    "DillSerializer",
+    "JsonSerializer",
+    "NumpySerializer",
+    "PandasSerializer",
+]

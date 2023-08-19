@@ -3,8 +3,6 @@ import logging
 import typing as T
 from collections import OrderedDict
 
-from scrat.utils import hash_method
-
 from .base import Hasher
 from .iterable import IterableHasher
 from .numpy import NumpyHasher
@@ -35,6 +33,24 @@ DEFAULTS[tuple] = IterableHasher(FALLBACK)
 
 
 class HashManager:
+    """
+    Coordinate the hashing of the arguments, code, etc
+
+    Parameters
+    ----------
+    hashers
+        Dictionary to override the Hasher used for certain arguments,
+        by default None
+    hash_code
+        If True the function's code is included in the hash, by default True
+    ignore_args
+        List of argument names to be ignored, by default None
+    watch_functions
+        Extra functions to include in the hash, by default None
+    watch_globals
+        Global variables to include in the hash, by default None
+    """
+
     def __init__(
         self,
         hashers: T.Optional[T.Dict[str, Hasher]] = None,
@@ -53,24 +69,48 @@ class HashManager:
     def hash(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
     ) -> str:
+        """
+        Calculate the hash for a function call.
+
+        Parameters
+        ----------
+        args
+            positional arguments.
+        kwargs
+            keyword arguments.
+        func
+            the function to be called.
+
+        Returns
+        -------
+            the hash-string resulting of combining all argument and code hashes.
+        """
+        #
         # hash arguments
+        #
         hashed_args = []
         for arg_name, arg_value in self._normalize_args(args, kwargs, func).items():
             hashed_args.append(self.hash_argument(arg_name, arg_value))
-        hash_result = hash_method(*hashed_args)
+        hash_result = Hasher.md5_hash(*hashed_args)
 
+        #
         # hash funcion's code if necessary
+        #
         if self.hash_code:
             hashed_code = self._hash_code(func)
-            hash_result = hash_method(hash_result, hashed_code)
+            hash_result = Hasher.md5_hash(hash_result, hashed_code)
 
+        #
         # hash the code of any other watched function
+        #
         if len(self.watch_functions):
-            hash_result = hash_method(
+            hash_result = Hasher.md5_hash(
                 hash_result, *[self._hash_code(f) for f in self.watch_functions]
             )
 
+        #
         # hash any other watched global variable
+        #
         if len(self.watch_globals):
             closure = inspect.getclosurevars(func)
             global_vars = closure.globals.copy()
@@ -80,15 +120,29 @@ class HashManager:
                 gloval_value = global_vars[global_name]
                 globals_hash.append(self.hash_argument(global_name, gloval_value))
 
-            hash_result = hash_method(hash_result, *globals_hash)
+            hash_result = Hasher.md5_hash(hash_result, *globals_hash)
 
         return hash_result
 
-    def hash_argument(self, name, value):
+    def hash_argument(self, name: str, value: T.Any) -> str:
+        """
+        Generate the hash for a single argument.
+
+        Parameters
+        ----------
+        name
+            argument name normalized.
+        value
+            argument value.
+
+        Returns
+        -------
+            the hash-string corresponding to this argument.
+        """
         hasher = self._get_hasher(name, value)
         logger.debug("using '%s' for argument '%s'", hasher.__class__.__name__, name)
         hashed_value = hasher.hash(value)
-        return hash_method(name, hashed_value, type(value).__name__)
+        return Hasher.md5_hash(name, hashed_value, type(value).__name__)
 
     def _get_hasher(self, arg_name: str, arg: T.Any) -> Hasher:
         if arg_name in self.hashers:
@@ -99,11 +153,46 @@ class HashManager:
         return FALLBACK
 
     def _hash_code(self, func) -> str:
-        return hash_method(inspect.getsource(func).encode())
+        return Hasher.md5_hash(inspect.getsource(func).encode())
 
     def _normalize_args(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
-    ):
+    ) -> T.Dict[str, T.Any]:
+        """
+        Normalize args and kwargs.
+
+        The same function can be called with the same arguments but changing which
+        are passed by position (args) and which are passed by name (kwargs),
+        this function aims to normalize all those different forms of calling into a
+        single form that corresponds to call the function passing all arguments by name,
+        in the order they appear in the function's signature.
+
+        Parameters
+        ----------
+        args
+            positional arguments
+        kwargs
+            named or keyword arguments
+        func
+            function to be called
+
+        Returns
+        -------
+            keyword mapping
+
+        Examples
+        --------
+        >>> from scrat.hasher import HashManager
+        >>> manager = HashManager()
+        >>> def f(a, b):
+        >>>     pass
+        >>> manager._normalize_args(args=[1, 2], kwargs={}, func=f)
+        OrderedDict([('a', 1), ('b', 2)])
+        >>> manager._normalize_args(args=[1], kwargs={"b":2}, func=f)
+        OrderedDict([('a', 1), ('b', 2)])
+        >>> manager._normalize_args(args=[], kwargs={"b":2, "a":1}, func=f)
+        OrderedDict([('a', 1), ('b', 2)])
+        """
         args = list(args)
         normalized_args = OrderedDict()
 

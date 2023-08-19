@@ -16,6 +16,39 @@ logger = logging.getLogger(__name__)
 
 
 class Squirrel:
+    """
+    Stash manager, in charge of fetching and storing the Nuts.
+
+    Parameters
+    ----------
+    serializer
+        Select a serializer for the function's result, by default a good
+        serializer is inferred from the typehint, using `PickleSerializer` as
+        the fallback.
+    name
+        Name that identifies this function, by default the function name is used.
+    hashers
+        Dictionary specifying hashers used for the arguments, by default hashers
+        are selected according to the type of the argument, using `ToStringHasher`
+        as the fallback.
+    hash_code
+        Control if the function's code should be used in the hash, by default True.
+    ignore_args
+        List of arguments to ignore from the hash, by default None
+    watch_functions
+        List of functions which code should be included in the hash, by default None
+    watch_globals
+        List of global variables to include in the hash, by default None
+    force
+        If set to True the stash is ignored, the function is called and the result
+        is saved to the stash, by default the global setting `scrat.Setting.force` is
+        used
+    disable
+        If set to True the stash is ignored, the function called and the result
+        is **not** saved, by default the global setting `scrat.Setting.disable` is used
+
+    """
+
     def __init__(
         self,
         name: str,
@@ -47,11 +80,39 @@ class Squirrel:
     def hash(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
     ) -> str:
+        """
+        Calculate the hash for a function call.
+
+        Parameters
+        ----------
+        args
+            positional arguments.
+        kwargs
+            keyword arguments.
+        func
+            the function to be called.
+
+        Returns
+        -------
+            the hash-string resulting of combining all argument and code hashes.
+        """
         hash_key = self.hash_manager.hash(args=args, kwargs=kwargs, func=func)
         logger.debug("Hash key for %s is '%s'", self.name, hash_key)
         return hash_key
 
-    def exists(self, hash_key):
+    def exists(self, hash_key: str) -> bool:
+        """
+        Check if the hash exists
+
+        Parameters
+        ----------
+        hash_key
+            The hash-string calculated in `Squirrel.hash`.
+
+        Returns
+        -------
+            Whether the hash exists or not.
+        """
         if self.force or self.disable:
             logger.debug(
                 "Forcing the result or scrat is disable, not reusing the result"
@@ -61,7 +122,19 @@ class Squirrel:
         with self.db_connector.session() as session:
             return session.query(exists().where(Nut.hash == hash_key)).scalar()
 
-    def fetch(self, hash_key):
+    def fetch(self, hash_key: str) -> T.Any:
+        """
+        Fetch and recover a result from the stash.
+
+        Parameters
+        ----------
+        hash_key
+            The hash-string calculated in `Squirrel.hash`.
+
+        Returns
+        -------
+            The result loaded into memory.
+        """
         logger.debug("Fetching '%s' for %s", hash_key, self.name)
 
         with self.db_connector.session() as session:
@@ -73,6 +146,18 @@ class Squirrel:
         return result
 
     def stash(self, hash_key: str, time_s: int, result: T.Any):
+        """
+        Stores a result.
+
+        Parameters
+        ----------
+        hash_key
+            The hash-string calculated in `Squirrel.hash`.
+        time_s
+            Execution time of the underlying function.
+        result
+            the result of the underlying function.
+        """
         if self.disable:
             logger.debug("Scrat is disable, not saving")
             return

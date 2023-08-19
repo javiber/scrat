@@ -3,6 +3,19 @@ from pathlib import Path
 
 
 class DillSerializer:
+    """
+    Serializer using dill.
+
+    In order to use this Serializer dill needs to be installed.
+
+    Parameters
+    ----------
+    dump_kwargs
+        extra arguments for dill.dump, by default None
+    load_kwargs
+        extra arguments for dill.load, by default None
+    """
+
     def __init__(
         self,
         dump_kwargs: T.Optional[T.Dict[str, T.Any]] = None,
