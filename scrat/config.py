@@ -15,11 +15,19 @@ class DeletionMethod(Enum):
 @dataclass(frozen=True)
 class Config:
     base_path: Path
+    "path to `.scrat` forlder"
+    # TODO: global max_size is not enforced yet
     max_size: T.Optional[int] = None
+    "size limit of the stash"
+    # TODO: global ttl is not enforced yet
     ttl: T.Optional[int] = None
+    "Time-to-live of objects"
     deletion_method: DeletionMethod = DeletionMethod.lru
+    "Cache policy used to remove entries"
     force: bool = False
+    "Forcefully re-run all functions"
     disable: bool = False
+    "Forcefully re-run all functions but not store the results"
 
     db_file: str = "stash.db"
     stash_dir: str = "stash"
@@ -44,6 +52,7 @@ class Config:
     # TODO: find a way to automatically save and load to/from yaml
     @classmethod
     def load(cls, base_path: T.Optional[Path] = None) -> "Config":
+        "Load the config from a yaml"
         if base_path is None:
             # Search '.scrat' folder starting from the CWD and walking up
             cwd = Path(os.getcwd())
@@ -67,6 +76,7 @@ class Config:
 
     @classmethod
     def create_config_file(cls, base_path: Path):
+        "Initialize the yaml with the default settings"
         config = cls(base_path=base_path)
         with open(base_path / cls.config_file, "w") as f:
             yaml.dump(

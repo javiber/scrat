@@ -40,6 +40,9 @@ ipython = "^7.0.0"
 pytest-mock = "^3.11.1"
 ipdb = "^0.13.13"
 flake8 = "^5.0.0"
+mike = "^1.1.2"
+mkdocs-material = "^9.1.21"
+mkdocstrings = {extras = ["python"], version = "^0.22.0"}
 
 [tool.poetry.scripts]
 scrat = "scrat.cli:scrat"

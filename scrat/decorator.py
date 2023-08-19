@@ -26,27 +26,54 @@ def stash(
 
     Parameters
     ----------
-    serializer, optional
-        Select a serializer for the function's result, by default `PickleSerializer`
-        is used
-    name, optional
-        Name that identifies this function, by default the function __name__ is used
-    hashers, optional
-        Dictionary specifying hashers used for the argiments, by default None
-    hash_code, optional
-        Control if the function's code should be used in the hash, by default True
-    ignore_args, optional
+    serializer
+        Select a serializer for the function's result, by default a good
+        serializer is inferred from the typehint, using `PickleSerializer` as
+        the fallback.
+    name
+        Name that identifies this function, by default the function name is used.
+    hashers
+        Dictionary specifying hashers used for the arguments, by default hashers
+        are selected according to the type of the argument, using `ToStringHasher`
+        as the fallback.
+    hash_code
+        Control if the function's code should be used in the hash, by default True.
+    ignore_args
         List of arguments to ignore from the hash, by default None
-    watch_functions, optional
-        List of functions which code will be included in the hash, by default None
-    watch_globals, optional
+    watch_functions
+        List of functions which code should be included in the hash, by default None
+    watch_globals
         List of global variables to include in the hash, by default None
-    force, optional
-        If set to True the saved result is ignored, the function called and the result
-        overritten, by default the value on `scrat.Setting.force` is used
-    disable, optional
-        If set to True the saved result is ignored, the function called and the new
-        result is also ignored, by default the value on `scrat.Setting.disable` is used
+    force
+        If set to True the stash is ignored, the function is called and the result
+        is saved to the stash, by default the global setting `scrat.Setting.force` is
+        used
+    disable
+        If set to True the stash is ignored, the function called and the result
+        is **not** saved, by default the global setting `scrat.Setting.disable` is used
+
+    Notes
+    -----
+    If possible, avoid using the default `PickleSerializer`. This serializer is used by
+    default because it works with most objects but pickle is not a good format to store
+    the results long-term. We encourage users to select one the other serializers
+    provided or writing a custom one.
+
+    Examples
+    --------
+
+    Simple example
+
+    >>> import scrat as sc
+    >>> @sc.stash()
+    >>> def funcion():
+    >>>     return 1
+
+    Custom serializer
+
+    >>> @sc.stash(serializer=sc.JsonSerializer())
+    >>> def funcion():
+    >>>     return {"json": True}
     """
 
     def deco(func):

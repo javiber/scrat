@@ -1,0 +1,1 @@
+::: scrat.hasher

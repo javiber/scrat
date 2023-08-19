@@ -1,0 +1,60 @@
+site_name: Scrat Docs
+
+theme:
+  name: material
+  # favicon: imgs/nut.ico
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.tabs
+  icon:
+    repo: fontawesome/brands/git-alt
+  # logo: imgs/squirrel.png
+  language: en
+repo_name: javiber/scrat
+repo_url: https://github.com/javiber/scrat
+edit_uri: ""
+
+
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - Reference:
+    - reference/index.md
+    - Serializers: reference/serializer.md
+    - Hashers: reference/hasher.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      custom_templates: templates
+      default_handler: python
+      handlers:
+          python:
+              options:
+                  show_source: true
+                  docstring_style: numpy
+                  show_root_heading: false
+                  show_root_full_path: false
+                  merge_init_into_class: false
+                  show_if_no_docstring: false
+                  members_order: source
+  - autorefs
+  - mike:
+      version_selector: true
+
+extra:
+  version:
+    provider: mike
+    default: latest
+
+markdown_extensions:
+    - toc:
+        permalink: "#"  # adds link anchors to all titles (default char is ¶)
+    - pymdownx.tabbed:
+        alternate_style: true
+    - admonition
+
+watch:
+  - scrat

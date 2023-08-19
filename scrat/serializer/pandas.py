@@ -19,6 +19,25 @@ class Format(Enum):
 
 
 class PandasSerializer:
+    """
+    Serializer for Pandas Series and DataFrames.
+
+    In order to use this Serializer pandas needs to be installed,
+    some formats might need aditional libraries.
+
+    Parameters
+    ----------
+    format
+        Serialization method from the ones supported by pandas,
+        by default Format.parquet
+    to_kwargs
+        Extra arguments for the corresponding pandas.read_<format> function,
+        by default None
+    read_kwargs
+        Extra arguments for the corresponding pandas.to_<format> function,
+        by default None
+    """
+
     def __init__(
         self,
         format: T.Union[str, Format] = Format.parquet,
