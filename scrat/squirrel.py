@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy.sql import exists, func, select
 
 from scrat.db import DBConnector, Nut
+from scrat.utils import humanize_size
 
 from .config import CachePolicy, Config
 from .hasher import Hasher, HashManager
@@ -166,16 +167,18 @@ class Squirrel:
             the result of the underlying function.
         """
         if self.disable:
-            logger.info("Scrat is disable, not saving")
+            logger.warning("Scrat is disable, not saving")
             return
 
         with self.db_connector.session() as session:
+            # check the size specified for this name
             self._check_size(
                 self.max_size,
                 name=self.name,
                 cache_policy=self.cache_policy,
                 session=session,
             )
+            # check the global size specified for the stash
             self._check_size(
                 self.config.max_size,
                 name=None,
@@ -217,7 +220,17 @@ class Squirrel:
                 current_size = 0
 
             while current_size >= max_size:
-                logger.debug("Size limit %s hit, freeing space", max_size)
+                if name is not None:
+                    logger.info(
+                        "You have reached the limit of %s for '%s', freeing space...",
+                        humanize_size(max_size),
+                        name,
+                    )
+                else:
+                    logger.info(
+                        "You have reached the limit of %s for the entire stash, freeing space...",
+                        humanize_size(max_size),
+                    )
 
                 if cache_policy == CachePolicy.lru:
                     to_delete = (
@@ -228,7 +241,7 @@ class Squirrel:
                     )
 
                 elif cache_policy == CachePolicy.lru:
-                    to_delete = (
+                    to_delete: Nut = (
                         session.query(Nut)
                         .filter(*filters)
                         .order_by(Nut.use_count)
@@ -237,7 +250,7 @@ class Squirrel:
                 else:
                     logger.error("Incorrect DeletionMethod %s", cache_policy)
                     break
-                logger.info("Removing %s to free up space", to_delete)
+                logger.info("Removing %s to free up %s", to_delete, to_delete.size)
 
                 os.remove(to_delete.path)
                 session.delete(to_delete)
