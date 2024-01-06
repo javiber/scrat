@@ -8,7 +8,7 @@ from sqlalchemy.sql import exists, func, select
 
 from scrat.db import DBConnector, Nut
 
-from .config import Config, DeletionMethod
+from .config import CachePolicy, Config
 from .hasher import Hasher, HashManager
 from .serializer import Serializer
 
@@ -46,6 +46,11 @@ class Squirrel:
     disable
         If set to True the stash is ignored, the function called and the result
         is **not** saved, by default the global setting `scrat.Setting.disable` is used
+    max_size
+        Maximum size allowed for files of this function, if the limit is about to be met
+        other files are removed befor storing a new one based on the cache_policy
+    cache_policy
+        Cache policy, by default Least Recentrly Used (LRU) is applied
 
     """
 
@@ -61,13 +66,11 @@ class Squirrel:
         force: T.Optional[bool] = None,
         disable: T.Optional[bool] = None,
         max_size: T.Optional[int] = None,
+        cache_policy: CachePolicy = CachePolicy.lru,
     ) -> None:
         self.config = Config.load()
         self.name = name
-        self.force = force if force is not None else self.config.force
-        self.disable = disable if disable is not None else self.config.disable
-        self.max_size = max_size
-        self.db_connector = DBConnector(self.config.db_path)
+        self.serializer = serializer
         self.hash_manager = HashManager(
             hashers=hashers,
             ignore_args=ignore_args,
@@ -75,7 +78,11 @@ class Squirrel:
             watch_functions=watch_functions,
             watch_globals=watch_globals,
         )
-        self.serializer = serializer
+        self.force = force if force is not None else self.config.force
+        self.disable = disable if disable is not None else self.config.disable
+        self.max_size = max_size
+        self.cache_policy = cache_policy
+        self.db_connector = DBConnector(self.config.db_path)
 
     def hash(
         self, args: T.List[T.Any], kwargs: T.Dict[str, T.Any], func: T.Callable
@@ -159,51 +166,25 @@ class Squirrel:
             the result of the underlying function.
         """
         if self.disable:
-            logger.debug("Scrat is disable, not saving")
+            logger.info("Scrat is disable, not saving")
             return
 
         with self.db_connector.session() as session:
-            if self.max_size is not None:
-                current_size, count = (
-                    session.query(func.sum(Nut.size), func.count(Nut.hash))
-                    .filter(Nut.name == self.name)
-                    .first()
-                )
-                if count == 0:
-                    current_size = 0
-
-                while current_size >= self.max_size:
-                    logger.debug("Size limit hit, freeing space")
-
-                    if self.config.deletion_method == DeletionMethod.lru:
-                        to_delete = (
-                            session.query(Nut)
-                            .filter(Nut.name == self.name)
-                            .order_by(func.ifnull(Nut.used_at, Nut.created_at))
-                            .first()
-                        )
-                        logger.info("Removing %s", to_delete)
-
-                    elif self.config.deletion_method == DeletionMethod.lru:
-                        to_delete = (
-                            session.query(Nut)
-                            .filter(Nut.name == self.name)
-                            .order_by(Nut.use_count)
-                            .first()
-                        )
-                        logger.info("Removing %s", to_delete)
-                    else:
-                        logger.error(
-                            "Incorrect DeletionMethod %s", self.config.deletion_method
-                        )
-                        break
-
-                    os.remove(to_delete.path)
-                    session.delete(to_delete)
-                    session.commit()
-                    current_size -= to_delete.size
+            self._check_size(
+                self.max_size,
+                name=self.name,
+                cache_policy=self.cache_policy,
+                session=session,
+            )
+            self._check_size(
+                self.config.max_size,
+                name=None,
+                cache_policy=self.config.cache_policy,
+                session=session,
+            )
 
             logger.debug("Storing '%s' for %s", hash_key, self.name)
+
             path = self.config.cache_path / f"{self.name}_{hash_key}"
             self.serializer.dump(result, path)
             file_size = round(os.stat(path).st_size)
@@ -220,3 +201,45 @@ class Squirrel:
             )
             session.add(nut)
             session.commit()
+
+    def _check_size(self, max_size: int, name: str, cache_policy: CachePolicy, session):
+        if max_size is not None:
+            filters = []
+            if name is not None:
+                filters.append(Nut.name == name)
+
+            current_size, count = (
+                session.query(func.sum(Nut.size), func.count(Nut.hash))
+                .filter(*filters)
+                .first()
+            )
+            if count == 0:
+                current_size = 0
+
+            while current_size >= max_size:
+                logger.debug("Size limit %s hit, freeing space", max_size)
+
+                if cache_policy == CachePolicy.lru:
+                    to_delete = (
+                        session.query(Nut)
+                        .filter(*filters)
+                        .order_by(func.ifnull(Nut.used_at, Nut.created_at))
+                        .first()
+                    )
+
+                elif cache_policy == CachePolicy.lru:
+                    to_delete = (
+                        session.query(Nut)
+                        .filter(*filters)
+                        .order_by(Nut.use_count)
+                        .first()
+                    )
+                else:
+                    logger.error("Incorrect DeletionMethod %s", cache_policy)
+                    break
+                logger.info("Removing %s to free up space", to_delete)
+
+                os.remove(to_delete.path)
+                session.delete(to_delete)
+                session.commit()
+                current_size -= to_delete.size

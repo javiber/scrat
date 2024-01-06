@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 
-class DeletionMethod(Enum):
+class CachePolicy(Enum):
     lru = "lru"
     lfu = "lfu"
 
@@ -22,7 +22,7 @@ class Config:
     # TODO: global ttl is not enforced yet
     ttl: T.Optional[int] = None
     "Time-to-live of objects"
-    deletion_method: DeletionMethod = DeletionMethod.lru
+    cache_policy: CachePolicy = CachePolicy.lru
     "Cache policy used to remove entries"
     force: bool = False
     "Forcefully re-run all functions"
@@ -69,7 +69,7 @@ class Config:
             base_path=Path(config_dict["base_path"]),
             max_size=config_dict["max_size"],
             ttl=config_dict["ttl"],
-            deletion_method=DeletionMethod(config_dict["deletion_method"]),
+            cache_policy=CachePolicy(config_dict["cache_policy"]),
             force=(os.getenv("SCRAT_FORCE", "False").lower() in ("true", 1)),
             disable=(os.getenv("SCRAT_DISABLE", "False").lower() in ("true", 1)),
         )
@@ -84,7 +84,7 @@ class Config:
                     "base_path": str(config.base_path.absolute()),
                     "max_size": config.max_size,
                     "ttl": config.ttl,
-                    "deletion_method": config.deletion_method.value,
+                    "cache_policy": config.cache_policy.value,
                 },
                 f,
             )

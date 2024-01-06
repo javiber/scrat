@@ -2,6 +2,7 @@ import functools
 import logging
 import typing as T
 
+from .config import CachePolicy
 from .hasher import Hasher
 from .serializer import Serializer, get_default_serializer
 from .squirrel import Squirrel
@@ -21,6 +22,7 @@ def stash(
     force: T.Optional[bool] = None,
     disable: T.Optional[bool] = None,
     max_size: T.Optional[int] = None,
+    cache_policy: CachePolicy = CachePolicy.lru,
 ):
     """Wrap a function to stash the results
 
@@ -51,6 +53,11 @@ def stash(
     disable
         If set to True the stash is ignored, the function called and the result
         is **not** saved, by default the global setting `scrat.Setting.disable` is used
+    max_size
+        Maximum size allowed for files of this function, if the limit is about to be met
+        other files are removed befor storing a new one based on the cache_policy
+    cache_policy
+        Cache policy, by default Least Recentrly Used (LRU) is applied
 
     Notes
     -----
@@ -90,6 +97,7 @@ def stash(
             force=force,
             disable=disable,
             max_size=max_size,
+            cache_policy=cache_policy,
         )
 
         timer = Timer()
