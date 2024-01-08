@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrat"
-version = "0.2.0"
+version = "0.3.0"
 description = "Easily stash the results of expensive functions to disk"
 authors = ["javiber <javier.berneche@gmail.com>"]
 readme = "README.md"
